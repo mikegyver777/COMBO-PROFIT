@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice Sheet & Profit Calculator - Alta Cal</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            padding: 15px;
+            background-color: #f5f5f5;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .main-container {
+            background-color: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 22px;
+            text-align: center;
+        }
+
+        .section {
+            margin-bottom: 10px;
+            border: 2px solid #333;
+            padding: 8px;
+            background-color: #fff;
+        }
+
+        .section-header {
+            background-color: #000;
+            color: white;
+            padding: 6px 10px;
+            font-weight: bold;
+            margin: -8px -8px 8px -8px;
+            font-size: 14px;
+        }
+
+        .bank-info {
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        input[type="text"],
+        input[type="date"],
+        input[type="number"],
+        select {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+            width: 100%;
+        }
+
+        input[type="number"] {
+            text-align: right;
+        }
+
+        .amount-display {
+            font-size: 24px;
+            font-weight: bold;
+            color: #000;
+            padding: 8px;
+            background-color: #f0f0f0;
+            border: 1px solid #999;
+            text-align: right;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 5px;
+        }
+
+        th, td {
+            border: 1px solid #333;
+            padding: 4px 6px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f0f0f0;
+            font-weight: bold;
+            font-size: 13px;
+        }
+
+        td input {
+            border: none;
+            background: transparent;
+            width: 100%;
+            padding: 2px;
+            font-size: 13px;
+        }
+
+        .summary-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 8px;
+        }
+
+        .summary-item {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .summary-label {
+            font-weight: bold;
+            background-color: #000;
+            color: white;
+            padding: 8px;
+            text-align: center;
+            font-size: 13px;
+        }
+
+        .summary-value {
+            background-color: #f0f0f0;
+            border: 1px solid #999;
+            padding: 10px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 20px;
+            min-height: 45px;
+        }
+
+        .button-container {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .action-button {
+            flex: 1;
+            padding: 15px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .print-button {
+            background-color: #2196F3;
+            color: white;
+        }
+
+        .add-file-button {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .print-button:hover {
+            background-color: #0b7dda;
+        }
+
+        .add-file-button:hover {
+            background-color: #45a049;
+        }
+
+        .divider {
+            height: 3px;
+            background: linear-gradient(to right, #2196F3, #4CAF50);
+            margin: 30px 0;
+            border-radius: 2px;
+        }
+
+        /* Profit Calculator Styles */
+        .calc-section-header {
+            background: #BBDEFB;
+            padding: 12px;
+            font-weight: 600;
+            text-align: center;
+            color: #1565C0;
+            border-radius: 6px;
+            margin-bottom: 10px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #555;
+        }
+
+        .input-with-symbol {
+            display: flex;
+            align-items: center;
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            padding: 0 12px;
+        }
+
+        .input-with-symbol input {
+            border: none;
+            flex: 1;
+            padding: 12px 0;
+            text-align: right;
+            font-size: 16px;
+        }
+
+        .calc-display {
+            background: #f0f0f0;
+            padding: 8px;
+            border-radius: 4px;
+            text-align: center;
+            font-weight: 600;
+            margin-top: 5px;
+        }
+
+        .auto-filled {
+            background-color: #E3F2FD !important;
+            border-color: #2196F3 !important;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .bank-info {
+                grid-template-columns: 1fr;
+            }
+
+            .summary-section {
+                grid-template-columns: 1fr;
+            }
+
+            table {
+                font-size: 12px;
+            }
+
+            th, td {
+                padding: 5px;
+            }
+
+            .section-header {
+                grid-template-columns: 1fr !important;
+                gap: 10px !important;
+            }
+
+            .section-header input {
+                width: 100%;
+            }
+
+            .amount-display {
+                font-size: 20px;
+            }
+
+            .summary-value {
+                font-size: 18px;
+            }
+        }
+
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+
+            body {
+                background-color: white;
+                padding: 0;
+                margin: 0;
+            }
+
+            .main-container {
+                box-shadow: none;
+                padding: 10px;
+            }
+
+            .section {
+                page-break-inside: avoid;
+                margin-bottom: 8px;
+                padding: 6px;
+            }
+
+            .section-header {
+                padding: 4px 8px;
+                margin: -6px -6px 6px -6px;
+                font-size: 12px;
+            }
+
+            h1 {
+                font-size: 18px;
+                margin-bottom: 10px;
+            }
+
+            th, td {
+                padding: 3px 4px;
+                font-size: 11px;
+            }
+
+            td input {
+                font-size: 11px;
+            }
+
+            .summary-section {
+                margin-top: 5px;
+                gap: 10px;
+            }
+
+            .summary-label {
+                padding: 4px;
+                font-size: 11px;
+            }
+
+            .summary-value {
+                padding: 4px;
+                font-size: 16px;
+            }
+
+            button {
+                display: none;
+            }
+
+            input[type="text"],
+            input[type="date"],
+            input[type="number"] {
+                font-size: 11px;
+                padding: 2px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <h1>INVOICE SHEET</h1>
+
+        <!-- Money in Bank Section with Job Number -->
+        <div class="section">
+            <div class="section-header" style="display: grid; grid-template-columns: auto 1fr; gap: 20px; align-items: center;">
+                <div>JOB NUMBER: <input type="text" id="jobNumber" value="" placeholder="Enter job number" oninput="updateJobNumber(this.value)" style="background: white; border: 1px solid #666; padding: 5px 10px; font-size: 16px; font-weight: bold; color: #000; border-radius: 3px;"></div>
+                <div>MONEY IN BANK</div>
+            </div>
+            <div class="bank-info">
+                <div class="checkbox-container">
+                    <input type="checkbox" id="moneyInBank">
+                    <label for="moneyInBank">YES</label>
+                </div>
+                <div>
+                    <input type="date" id="contractDate" value="">
+                </div>
+                <div style="display: grid; grid-template-columns: auto 1fr; gap: 10px; align-items: center;">
+                    <div style="font-weight: bold;">CONTRACT AMOUNT</div>
+                    <input type="number" class="amount-display" id="contractAmount" value="" placeholder="0.00" step="0.01" inputmode="decimal" oninput="updateContractAmount(this.value)" style="border: 1px solid #999;">
+                </div>
+            </div>
+        </div>
+
+        <!-- Invoice Amount Section -->
+        <div class="section">
+            <div class="section-header">INVOICE AMOUNT</div>
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 50%;">LABOR & MATERIAL</th>
+                        <th style="width: 35%;">COST</th>
+                        <th style="width: 15%;">PAID</th>
+                    </tr>
+                </thead>
+                <tbody id="invoiceTable">
+                    <tr>
+                        <td><input type="text" placeholder="Company name"></td>
+                        <td><input type="number" step="0.01" class="invoice-amount" inputmode="decimal" oninput="calculateInvoiceTotals()"></td>
+                        <td style="text-align: center;"><input type="checkbox"></td>
+                    </tr>
+                    <tr>
+                        <td><input type="text" placeholder="Company name"></td>
+                        <td><input type="number" step="0.01" class="invoice-amount" inputmode="decimal" oninput="calculateInvoiceTotals()"></td>
+                        <td style="text-align: center;"><input type="checkbox"></td>
+                    </tr>
+                    <tr>
+                        <td><input type="text" placeholder="Company name"></td>
+                        <td><input type="number" step="0.01" class="invoice-amount" inputmode="decimal" oninput="calculateInvoiceTotals()"></td>
+                        <td style="text-align: center;"><input type="checkbox"></td>
+                    </tr>
+                    <tr>
+                        <td><input type="text" placeholder="Company name"></td>
+                        <td><input type="number" step="0.01" class="invoice-amount" inputmode="decimal" oninput="calculateInvoiceTotals()"></td>
+                        <td style="text-align: center;"><input type="checkbox"></td>
+                    </tr>
+                    <tr>
+                        <td><input type="text" placeholder="Company name"></td>
+                        <td><input type="number" step="0.01" class="invoice-amount" inputmode="decimal" oninput="calculateInvoiceTotals()"></td>
+                        <td style="text-align: center;"><input type="checkbox"></td>
+                    </tr>
+                    <tr>
+                        <td><input type="text" placeholder="Company name"></td>
+                        <td><input type="number" step="0.01" class="invoice-amount" inputmode="decimal" oninput="calculateInvoiceTotals()"></td>
+                        <td style="text-align: center;"><input type="checkbox"></td>
+                    </tr>
+                    <tr>
+                        <td><input type="text" placeholder="Company name"></td>
+                        <td><input type="number" step="0.01" class="invoice-amount" inputmode="decimal" oninput="calculateInvoiceTotals()"></td>
+                        <td style="text-align: center;"><input type="checkbox"></td>
+                    </tr>
+                    <tr>
+                        <td><input type="text" placeholder="Company name"></td>
+                        <td><input type="number" step="0.01" class="invoice-amount" inputmode="decimal" oninput="calculateInvoiceTotals()"></td>
+                        <td style="text-align: center;"><input type="checkbox"></td>
+                    </tr>
+                    <tr>
+                        <td><input type="text" placeholder="Company name"></td>
+                        <td><input type="number" step="0.01" class="invoice-amount" inputmode="decimal" oninput="calculateInvoiceTotals()"></td>
+                        <td style="text-align: center;"><input type="checkbox"></td>
+                    </tr>
+                    <tr>
+                        <td><input type="text" placeholder="Company name"></td>
+                        <td><input type="number" step="0.01" class="invoice-amount" inputmode="decimal" oninput="calculateInvoiceTotals()"></td>
+                        <td style="text-align: center;"><input type="checkbox"></td>
+                    </tr>
+                    <tr>
+                        <td><input type="text" placeholder="Company name"></td>
+                        <td><input type="number" step="0.01" class="invoice-amount" inputmode="decimal" oninput="calculateInvoiceTotals()"></td>
+                        <td style="text-align: center;"><input type="checkbox"></td>
+                    </tr>
+                    <tr>
+                        <td><input type="text" placeholder="Company name"></td>
+                        <td><input type="number" step="0.01" class="invoice-amount" inputmode="decimal" oninput="calculateInvoiceTotals()"></td>
+                        <td style="text-align: center;"><input type="checkbox"></td>
+                    </tr>
+                    <tr>
+                        <td><input type="text" placeholder="Company name"></td>
+                        <td><input type="number" step="0.01" class="invoice-amount" inputmode="decimal" oninput="calculateInvoiceTotals()"></td>
+                        <td style="text-align: center;"><input type="checkbox"></td>
+                    </tr>
+                    <tr>
+                        <td><input type="text" placeholder="Company name"></td>
+                        <td><input type="number" step="0.01" class="invoice-amount" inputmode="decimal" oninput="calculateInvoiceTotals()"></td>
+                        <td style="text-align: center;"><input type="checkbox"></td>
+                    </tr>
+                    <tr>
+                        <td><input type="text" placeholder="Company name"></td>
+                        <td><input type="number" step="0.01" class="invoice-amount" inputmode="decimal" oninput="calculateInvoiceTotals()"></td>
+                        <td style="text-align: center;"><input type="checkbox"></td>
+                    </tr>
+                </tbody>
+            </table>
+            <button onclick="addInvoiceRow()" style="margin-top: 10px; padding: 10px 20px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; width: 100%;">+ Add Invoice Row</button>
+        </div>
+
+        <!-- Summary Section (Invoice Sheet Only) -->
+        <div class="section">
+            <div class="summary-section">
+                <div class="summary-item">
+                    <div class="summary-label">LABOR & MATERIAL COST</div>
+                    <div class="summary-value" id="totalCost"></div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">JOB COST PERCENTAGE</div>
+                    <div class="summary-value" id="costPercentage"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="button-container no-print">
+            <button class="action-button print-button" onclick="printInvoiceSheet()">🖨️ Print Invoice Sheet</button>
+        </div>
+    </div>
+
+    <!-- Divider -->
+    <div class="divider"></div>
+
+    <!-- PROFIT CALCULATOR -->
+    <div class="main-container">
+        <h1>PROFIT CALCULATOR</h1>
+        
+        <div class="section">
+            <div class="calc-section-header">JOB INFORMATION</div>
+            <div class="form-grid" style="padding: 15px;">
+                <div class="form-group">
+                    <label>JOB NUMBER (Auto-filled)</label>
+                    <input type="text" id="calcJobNumber" class="auto-filled" readonly>
+                </div>
+                <div class="form-group">
+                    <label>CUSTOMER NAME</label>
+                    <input type="text" id="customerName">
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="calc-section-header">CONTRACT & PAYMENT</div>
+            <div style="padding: 15px;">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>CONTRACT AMOUNT (Auto-filled)</label>
+                        <div class="input-with-symbol auto-filled">
+                            <span>$</span>
+                            <input type="number" step="0.01" id="calcContractAmount" readonly>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>LABOR & MATERIAL (Auto-filled)</label>
+                        <div class="input-with-symbol auto-filled">
+                            <span>$</span>
+                            <input type="number" step="0.01" id="calcLaborMaterial" readonly>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>CASH/CHECK</label>
+                        <div class="input-with-symbol">
+                            <span>$</span>
+                            <input type="number" step="0.01" id="cashCheck" inputmode="decimal">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>FINANCE AMOUNT</label>
+                        <div class="input-with-symbol">
+                            <span>$</span>
+                            <input type="number" step="0.01" id="financeAmount" inputmode="decimal">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>DEALER FEE %</label>
+                        <input type="number" step="0.01" id="dealerFee" placeholder="3.5" inputmode="decimal">
+                        <div class="calc-display" id="dealerFeeAmount">$0.00</div>
+                    </div>
+                    <div class="form-group">
+                        <label>HOUSE FEE %</label>
+                        <div class="input-with-symbol">
+                            <input type="number" step="0.01" id="houseFeePercent" inputmode="decimal">
+                            <span>%</span>
+                        </div>
+                        <div class="calc-display" id="houseFeeAmount">$0.00</div>
+                    </div>
+                    <div class="form-group">
+                        <label>CREDIT CARD</label>
+                        <div class="input-with-symbol">
+                            <span>$</span>
+                            <input type="number" step="0.01" id="creditCard" inputmode="decimal">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>CC FEE %</label>
+                        <input type="number" step="0.01" id="creditCardFee" placeholder="3.5" inputmode="decimal">
+                        <div class="calc-display" id="creditCardFeeAmount">$0.00</div>
+                    </div>
+                </div>
+                <div style="text-align: center; padding: 15px; background: #BBDEFB; border-radius: 6px; font-weight: 700; font-size: 18px; margin-top: 15px;" id="afterHouseFee">
+                    $0.00
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="calc-section-header" style="background: #C8E6C9; color: #2E7D32;">ALTA CAL TEAM</div>
+            <div style="padding: 15px;">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>VETS ON CONTRACT</label>
+                        <input type="number" id="numVets" style="text-align: center; font-size: 20px; font-weight: 700;">
+                    </div>
+                    <div class="form-group">
+                        <label>REPS ON CONTRACT</label>
+                        <input type="number" id="numReps" style="text-align: center; font-size: 20px; font-weight: 700;">
+                    </div>
+                    <div class="form-group">
+                        <label>RIDE ALONGS</label>
+                        <input type="number" id="numRideAlongs" style="text-align: center; font-size: 20px; font-weight: 700;">
+                    </div>
+                </div>
+                <div id="tierResults" style="margin-top: 15px; padding: 15px; background: #f5f5f5; border-radius: 6px; display: none;">
+                    <div id="tierInfo" style="text-align: center; font-weight: 600; margin-bottom: 10px;"></div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div id="vetsBox"></div>
+                        <div id="repsBox"></div>
+                    </div>
+                </div>
+                <div class="form-grid" style="margin-top: 15px;">
+                    <div class="form-group">
+                        <label style="color: #D32F2F;">RIDE ALONG FEE</label>
+                        <div class="input-with-symbol" style="background: #FFEBEE; border-color: #EF5350;">
+                            <span>$</span>
+                            <input type="number" step="0.01" id="rideAlong" inputmode="decimal" style="background: transparent;">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label style="color: #D32F2F;">RIDE ALONG BONUS</label>
+                        <div class="input-with-symbol" style="background: #FFEBEE; border-color: #EF5350;">
+                            <span>$</span>
+                            <input type="number" step="0.01" id="rideAlongBonus" inputmode="decimal" style="background: transparent;">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div style="text-align: center; padding: 20px; background: linear-gradient(135deg, #1976D2, #0D47A1); border-radius: 12px; color: white; margin-top: 20px;">
+            <h3 style="margin-bottom: 15px;">TOTAL PROFIT</h3>
+            <div style="font-size: 36px; font-weight: 900;" id="finalProfit">$0.00</div>
+        </div>
+
+        <div class="button-container no-print" style="margin-top: 20px;">
+            <button class="action-button print-button" onclick="printCalculator()">🖨️ Print Calculator</button>
+            <button class="action-button" style="background: #FF9800; color: white;" onclick="printBoth()">🖨️ Print Both</button>
+        </div>
+    </div>
+
+    <script>
+        // Update Job Number
+        function updateJobNumber(value) {
+            document.getElementById('calcJobNumber').value = value;
+        }
+
+        // Update Contract Amount
+        function updateContractAmount(value) {
+            document.getElementById('calcContractAmount').value = value;
+            calculateProfitCalculator();
+        }
+
+        // Update Labor & Material Cost
+        function updateLaborMaterial(value) {
+            document.getElementById('calcLaborMaterial').value = value;
+            calculateProfitCalculator();
+        }
+
+        // Add Invoice Row
+        function addInvoiceRow() {
+            const tbody = document.getElementById('invoiceTable');
+            const newRow = document.createElement('tr');
+            newRow.innerHTML = `
+                <td><input type="text" placeholder="Company name"></td>
+                <td><input type="number" step="0.01" class="invoice-amount" inputmode="decimal" oninput="calculateInvoiceTotals()"></td>
+                <td style="text-align: center;"><input type="checkbox"></td>
+            `;
+            tbody.appendChild(newRow);
+        }
+
+        // Calculate Invoice Totals
+        function calculateInvoiceTotals() {
+            const contractAmount = parseFloat(document.getElementById('contractAmount').value) || 0;
+            const amountInputs = document.querySelectorAll('.invoice-amount');
+            let totalCost = 0;
+
+            amountInputs.forEach(input => {
+                const value = parseFloat(input.value) || 0;
+                totalCost += value;
+            });
+
+            // Update invoice sheet display
+            if (totalCost > 0) {
+                document.getElementById('totalCost').textContent = '$' + totalCost.toFixed(2);
+            } else {
+                document.getElementById('totalCost').textContent = '';
+            }
+            
+            if (contractAmount > 0 && totalCost > 0) {
+                const percentage = (totalCost / contractAmount * 100).toFixed(1);
+                document.getElementById('costPercentage').textContent = percentage + '%';
+            } else {
+                document.getElementById('costPercentage').textContent = '';
+            }
+
+            // Update profit calculator
+            updateLaborMaterial(totalCost);
+        }
+
+        // Calculate Profit Calculator
+        function calculateProfitCalculator() {
+            const contractAmount = parseFloat(document.getElementById('calcContractAmount').value) || 0;
+            const laborMaterial = parseFloat(document.getElementById('calcLaborMaterial').value) || 0;
+            const houseFeePercent = parseFloat(document.getElementById('houseFeePercent').value) || 0;
+            const dealerFeePercent = parseFloat(document.getElementById('dealerFee').value) || 0;
+            const creditCardFeePercent = parseFloat(document.getElementById('creditCardFee').value) || 0;
+            const creditCard = parseFloat(document.getElementById('creditCard').value) || 0;
+            const financeAmount = parseFloat(document.getElementById('financeAmount').value) || 0;
+            
+            const houseFeeAmount = (contractAmount * houseFeePercent) / 100;
+            const dealerFeeAmount = (financeAmount * dealerFeePercent) / 100;
+            const creditCardFeeAmount = (creditCard * creditCardFeePercent) / 100;
+            
+            const afterHouseFee = contractAmount - houseFeeAmount;
+            const totalAfterFees = afterHouseFee - laborMaterial - dealerFeeAmount;
+            const percentOfContract = afterHouseFee > 0 ? (totalAfterFees / afterHouseFee) * 100 : 0;
+            
+            // Tiered rates
+            let vetRate = 25;
+            if (percentOfContract >= 50) vetRate = 55;
+            else if (percentOfContract >= 40) vetRate = 45;
+            else if (percentOfContract >= 33) vetRate = 35;
+            
+            let repRate = 20;
+            if (percentOfContract >= 50) repRate = 40;
+            else if (percentOfContract >= 40) repRate = 30;
+            else if (percentOfContract >= 33) repRate = 25;
+            
+            const vetsCount = parseFloat(document.getElementById('numVets').value) || 0;
+            const repsCount = parseFloat(document.getElementById('numReps').value) || 0;
+            const totalPeople = vetsCount + repsCount;
+            
+            const vetCommissionTotal = (totalAfterFees * vetRate) / 100;
+            const repCommissionTotal = (totalAfterFees * repRate) / 100;
+            
+            const perVetPayout = totalPeople > 0 ? (vetCommissionTotal / totalPeople) : 0;
+            const perRepPayout = totalPeople > 0 ? (repCommissionTotal / totalPeople) : 0;
+            
+            const rideAlongFeeAmount = parseFloat(document.getElementById('rideAlong').value) || 0;
+            const rideAlongBonusAmount = parseFloat(document.getElementById('rideAlongBonus').value) || 0;
+            const rideAlongFeePerPerson = totalPeople > 0 ? rideAlongFeeAmount / totalPeople : 0;
+            const creditCardFeePerPerson = totalPeople > 0 ? creditCardFeeAmount / totalPeople : 0;
+            
+            const finalPerVetPayout = perVetPayout - rideAlongFeePerPerson - creditCardFeePerPerson;
+            const finalPerRepPayout = perRepPayout - rideAlongFeePerPerson - creditCardFeePerPerson;
+            const finalTotalVetsPayout = finalPerVetPayout * vetsCount;
+            const finalTotalRepsPayout = finalPerRepPayout * repsCount;
+            
+            const totalRideAlongPayout = rideAlongFeeAmount + rideAlongBonusAmount;
+            const altaCalTotalPayout = laborMaterial + finalTotalVetsPayout + finalTotalRepsPayout + totalRideAlongPayout;
+            const finalProfit = afterHouseFee - altaCalTotalPayout - dealerFeeAmount;
+            
+            // Update displays
+            document.getElementById('dealerFeeAmount').textContent = '$' + dealerFeeAmount.toFixed(2);
+            document.getElementById('houseFeeAmount').textContent = '$' + houseFeeAmount.toFixed(2);
+            document.getElementById('creditCardFeeAmount').textContent = '$' + creditCardFeeAmount.toFixed(2);
+            document.getElementById('afterHouseFee').textContent = '$' + afterHouseFee.toFixed(2);
+            document.getElementById('finalProfit').textContent = '$' + finalProfit.toFixed(2);
+            
+            // Show tier results
+            if (vetsCount > 0 || repsCount > 0) {
+                document.getElementById('tierResults').style.display = 'block';
+                document.getElementById('tierInfo').textContent = `Profit: ${percentOfContract.toFixed(1)}% → Vet: ${vetRate}% | Rep: ${repRate}%`;
+                
+                if (vetsCount > 0) {
+                    document.getElementById('vetsBox').innerHTML = `
+                        <div style="border: 2px solid #4CAF50; padding: 12px; border-radius: 6px; background: #f1f8e9;">
+                            <div style="font-weight: 700; text-align: center; margin-bottom: 8px;">VETS: ${vetsCount}</div>
+                            <div style="text-align: center; padding: 8px; background: white; border-radius: 4px; margin-bottom: 5px;">
+                                <div style="font-size: 10px;">Per Vet</div>
+                                <div style="font-size: 18px; font-weight: 700; color: #2E7D32;">$${finalPerVetPayout.toFixed(2)}</div>
+                            </div>
+                            <div style="text-align: center; padding: 8px; background: #C8E6C9; border-radius: 4px;">
+                                <div style="font-size: 10px;">Total Vets</div>
+                                <div style="font-size: 18px; font-weight: 700; color: #1B5E20;">$${finalTotalVetsPayout.toFixed(2)}</div>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                if (repsCount > 0) {
+                    document.getElementById('repsBox').innerHTML = `
+                        <div style="border: 2px solid #9C27B0; padding: 12px; border-radius: 6px; background: #f3e5f5;">
+                            <div style="font-weight: 700; text-align: center; margin-bottom: 8px;">REPS: ${repsCount}</div>
+                            <div style="text-align: center; padding: 8px; background: white; border-radius: 4px; margin-bottom: 5px;">
+                                <div style="font-size: 10px;">Per Rep</div>
+                                <div style="font-size: 18px; font-weight: 700; color: #6A1B9A;">$${finalPerRepPayout.toFixed(2)}</div>
+                            </div>
+                            <div style="text-align: center; padding: 8px; background: #E1BEE7; border-radius: 4px;">
+                                <div style="font-size: 10px;">Total Reps</div>
+                                <div style="font-size: 18px; font-weight: 700; color: #4A148C;">$${finalTotalRepsPayout.toFixed(2)}</div>
+                            </div>
+                        </div>
+                    `;
+                }
+            } else {
+                document.getElementById('tierResults').style.display = 'none';
+            }
+        }
+
+        // Attach event listeners to profit calculator inputs
+        document.getElementById('houseFeePercent').addEventListener('input', calculateProfitCalculator);
+        document.getElementById('dealerFee').addEventListener('input', calculateProfitCalculator);
+        document.getElementById('creditCardFee').addEventListener('input', calculateProfitCalculator);
+        document.getElementById('creditCard').addEventListener('input', calculateProfitCalculator);
+        document.getElementById('financeAmount').addEventListener('input', calculateProfitCalculator);
+        document.getElementById('numVets').addEventListener('input', calculateProfitCalculator);
+        document.getElementById('numReps').addEventListener('input', calculateProfitCalculator);
+        document.getElementById('rideAlong').addEventListener('input', calculateProfitCalculator);
+        document.getElementById('rideAlongBonus').addEventListener('input', calculateProfitCalculator);
+
+        // Print Functions
+        function printInvoiceSheet() {
+            window.print();
+        }
+
+        function printCalculator() {
+            window.print();
+        }
+
+        function printBoth() {
+            window.print();
+        }
+    </script>
+</body>
+</html>
