@@ -72,10 +72,12 @@
     .form-group input, .form-group select { padding:12px; border:2px solid #e0e0e0; border-radius:6px; font-size:16px; }
     .input-with-symbol { display:flex; align-items:center; background:#fff; border:2px solid #e0e0e0; border-radius:6px; padding:0 12px; }
     .input-with-symbol input { border:none; flex:1; padding:12px 0; text-align:right; font-size:16px; }
+    .calc-display { margin-top:5px; padding:8px; background:#e3f2fd; border:1px solid #2196F3; border-radius:4px; text-align:center; font-weight:600; font-size:14px; }
 
     .big-card { background:linear-gradient(135deg, var(--c1), var(--c2)); color:#fff; padding:30px; text-align:center; border-radius:12px; box-shadow:0 4px 15px rgba(0,0,0,.3); }
     .big-card .label { font-size:16px; font-weight:700; margin-bottom:12px; text-transform:uppercase; }
     .big-card .value { font-size:40px; font-weight:900; line-height:1.2; }
+    .bottom-totals { background:linear-gradient(135deg, #1e3c72, #2a5298); padding:30px; border-radius:12px; margin-top:20px; }
 
     .add-btn { background:#2196F3; color:#fff; font-weight:700; padding:18px 35px; border-radius:50px; border:none; font-size:16px; cursor:pointer; display:inline-flex; align-items:center; gap:12px; margin:20px auto; }
     .tier-results { background:#fff; padding:12px; border-radius:6px; border:2px solid #e0e0e0; margin-top:10px; }
@@ -91,6 +93,7 @@
     .tier-box .tier-value { font-size:18px; font-weight:700; }
 
     @media print {
+      @page { size: legal portrait; margin: 5mm; }
       .no-print { display:none !important; }
       .print-view { display:block !important; }
       .sticky-header { position:relative !important; }
@@ -262,18 +265,32 @@
           </div>
         `;
         const money = `
-          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-bottom:16px;">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:16px;">
+            <div style="border:2px solid #666;border-radius:8px;padding:12px;background:#f5f5f5;">
+              <div style="font-size:11px;font-weight:700;">Contract Amount</div>
+              <div style="font-size:16px;font-weight:900;">${app.fmt(data.contractAmount)}</div>
+            </div>
             <div style="border:2px solid #1976D2;border-radius:8px;padding:12px;background:#E3F2FD;">
-              <div style="font-size:12px;font-weight:700;">Total Collected (After Fees)</div>
-              <div style="font-size:20px;font-weight:900;">${app.fmt(data.totalAfterFees)}</div>
+              <div style="font-size:11px;font-weight:700;">Net Amount</div>
+              <div style="font-size:16px;font-weight:900;">${app.fmt(data.netAmount)}</div>
+            </div>
+            <div style="border:2px solid #FF9800;border-radius:8px;padding:12px;background:#FFF3E0;">
+              <div style="font-size:11px;font-weight:700;">House Fee</div>
+              <div style="font-size:16px;font-weight:900;">${app.fmt(data.houseFeeAmount)}</div>
+              <div style="font-size:9px;color:#666;margin-top:2px;">${data.houseFeePercent}%</div>
+            </div>
+            <div style="border:2px solid #EF5350;border-radius:8px;padding:12px;background:#FFEBEE;">
+              <div style="font-size:11px;font-weight:700;">Fees (Job Cost)</div>
+              <div style="font-size:16px;font-weight:900;">${app.fmt(data.fees)}</div>
+              <div style="font-size:9px;color:#666;margin-top:2px;">${(data.feePercent||0).toFixed(1)}%</div>
             </div>
             <div style="border:2px solid #4CAF50;border-radius:8px;padding:12px;background:#E8F5E9;">
-              <div style="font-size:12px;font-weight:700;">Labor & Material</div>
-              <div style="font-size:20px;font-weight:900;">${app.fmt(app.parseValue(calc.laborMaterial))}</div>
+              <div style="font-size:11px;font-weight:700;">Labor & Material</div>
+              <div style="font-size:16px;font-weight:900;">${app.fmt(app.parseValue(calc.laborMaterial))}</div>
             </div>
             <div style="border:2px solid #9C27B0;border-radius:8px;padding:12px;background:#F3E5F5;">
-              <div style="font-size:12px;font-weight:700;">Final Profit</div>
-              <div style="font-size:20px;font-weight:900;">${app.fmt(data.finalProfit)}</div>
+              <div style="font-size:11px;font-weight:700;">Final Profit</div>
+              <div style="font-size:16px;font-weight:900;">${app.fmt(data.finalProfit)}</div>
             </div>
           </div>
         `;
@@ -353,7 +370,7 @@
         escape(s){ return String(s).replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m])); },
         fmt(v){ const n=parseFloat(v||0); const f=isFinite(n)?n.toFixed(2):'0.00'; return '$'+f.replace(/\B(?=(\d{3})+(?!\d))/g,','); },
         parseValue(v){ if(v===null||v===undefined||v==='') return 0; const p=parseFloat(String(v).replace(/[,$]/g,'')); return isNaN(p)?0:p; },
-        parseFee(amount, fee){ if(fee===undefined||fee===null||fee==='') return 0; const amt=this.parseValue(amount); const percent=parseFloat(String(fee).replace('%',''))||0; return Math.round((amt*percent/100)*100)/100; },
+        roundMoney(v){ return Math.round((v||0) * 100) / 100; },
         getHouseFeePercent(contractAmount){ const a=this.parseValue(contractAmount); if(a<=20000) return 10; if(a<=30000) return 9; return 8; },
 
         init() {
@@ -386,19 +403,24 @@
         },
 
         calculateOne(data){
-          const contractAmount=this.parseValue(data.contractAmount);
-          const cashCheck=this.parseValue(data.cashCheck);
-          const financeAmount=this.parseValue(data.financeAmount);
-          const creditCard=this.parseValue(data.creditCard);
-          const laborMaterial=this.parseValue(data.laborMaterial);
+          const contractAmount=this.roundMoney(this.parseValue(data.contractAmount));
+          const netAmount=this.roundMoney(this.parseValue(data.netAmount));
+          const laborMaterial=this.roundMoney(this.parseValue(data.laborMaterial));
           const houseFeePercent=this.parseValue(data.houseFeePercent);
-          const houseFeeAmount=(contractAmount*houseFeePercent)/100;
-          const dealerFeeAmount=this.parseFee(data.financeAmount, data.dealerFee);
-          const creditCardFeeAmount=this.parseFee(data.creditCard, data.creditCardFee);
-          const totalCollected=cashCheck+financeAmount+creditCard;
-          const totalAfterFees=totalCollected-houseFeeAmount-dealerFeeAmount-creditCardFeeAmount;
-          const afterFeesAndLabor=totalAfterFees-laborMaterial;
-          const percentOfContract= totalAfterFees>0 ? (afterFeesAndLabor/totalAfterFees)*100 : 0;
+          
+          // House fee is Alta Cal's cut
+          const houseFeeAmount=this.roundMoney((contractAmount*houseFeePercent)/100);
+          
+          // Fees are the difference between contract and net (dealer fees, credit card fees, etc.)
+          const fees = this.roundMoney(contractAmount - netAmount);
+          const feePercent = contractAmount > 0 ? (fees / contractAmount) * 100 : 0;
+          
+          // Total after fees is the net amount minus house fee
+          const totalAfterFees = this.roundMoney(netAmount - houseFeeAmount);
+          
+          // Profit pool after labor/material
+          const afterFeesAndLabor = this.roundMoney(totalAfterFees - laborMaterial);
+          const percentOfContract = totalAfterFees > 0 ? (afterFeesAndLabor / totalAfterFees) * 100 : 0;
 
           let vetRate=25; if(percentOfContract>=50) vetRate=55; else if(percentOfContract>=40) vetRate=45; else if(percentOfContract>=33) vetRate=35;
           let repRate=20; if(percentOfContract>=50) repRate=40; else if(percentOfContract>=40) repRate=30; else if(percentOfContract>=33) repRate=25;
@@ -407,55 +429,53 @@
           const repsCount=this.parseValue(data.numReps);
           const totalPeople=vetsCount+repsCount||0;
 
-          const vetCommissionTotal=(afterFeesAndLabor*vetRate)/100;
-          const repCommissionTotal=(afterFeesAndLabor*repRate)/100;
+          const vetCommissionTotal=this.roundMoney((afterFeesAndLabor*vetRate)/100);
+          const repCommissionTotal=this.roundMoney((afterFeesAndLabor*repRate)/100);
 
-          const perVetPayout= totalPeople>0 ? (vetCommissionTotal/totalPeople) : 0;
-          const perRepPayout= totalPeople>0 ? (repCommissionTotal/totalPeople) : 0;
+          const perVetPayout= totalPeople>0 ? this.roundMoney(vetCommissionTotal/totalPeople) : 0;
+          const perRepPayout= totalPeople>0 ? this.roundMoney(repCommissionTotal/totalPeople) : 0;
 
-          const rideAlongFeeAmount=this.parseValue(data.rideAlong);
-          const rideAlongFeePerPerson= totalPeople>0 ? rideAlongFeeAmount/totalPeople : 0;
-          const creditCardFeePerPerson= totalPeople>0 ? creditCardFeeAmount/totalPeople : 0;
+          const rideAlongFeeAmount=this.roundMoney(this.parseValue(data.rideAlong));
+          const rideAlongFeePerPerson= totalPeople>0 ? this.roundMoney(rideAlongFeeAmount/totalPeople) : 0;
 
-          const finalPerVetPayout= perVetPayout - rideAlongFeePerPerson - creditCardFeePerPerson;
-          const finalPerRepPayout= perRepPayout - rideAlongFeePerPerson - creditCardFeePerPerson;
-          const finalTotalVetsPayout= finalPerVetPayout * vetsCount;
-          const finalTotalRepsPayout= finalPerRepPayout * repsCount;
+          const finalPerVetPayout= this.roundMoney(perVetPayout - rideAlongFeePerPerson);
+          const finalPerRepPayout= this.roundMoney(perRepPayout - rideAlongFeePerPerson);
+          const finalTotalVetsPayout= this.roundMoney(finalPerVetPayout * vetsCount);
+          const finalTotalRepsPayout= this.roundMoney(finalPerRepPayout * repsCount);
 
-          const rideAlongBonusAmount=this.parseValue(data.rideAlongBonus);
-          const totalRideAlongPayout= rideAlongFeeAmount + rideAlongBonusAmount;
+          const rideAlongBonusAmount=this.roundMoney(this.parseValue(data.rideAlongBonus));
+          const totalRideAlongPayout= this.roundMoney(rideAlongFeeAmount + rideAlongBonusAmount);
 
-          const altaCalTotalPayout= laborMaterial + finalTotalVetsPayout + finalTotalRepsPayout + totalRideAlongPayout;
-          const preliminaryProfit= totalAfterFees - altaCalTotalPayout;
+          const altaCalTotalPayout= this.roundMoney(laborMaterial + finalTotalVetsPayout + finalTotalRepsPayout + totalRideAlongPayout);
+          const preliminaryProfit= this.roundMoney(totalAfterFees - altaCalTotalPayout);
 
-          const canvasserPayout= preliminaryProfit * (this.parseValue(data.canvasserPercent)/100);
-          const confirmerPayout= contractAmount * (this.parseValue(data.confirmerPercent)/100);
-          const elisoPayout= contractAmount * (this.parseValue(data.elisoPercent)/100);
-          const prodMSPayout= this.parseValue(data.prodMSAmount) * (this.parseValue(data.prodMSPercent)/100);
-          const prodRSPayout= this.parseValue(data.prodRSAmount) * (this.parseValue(data.prodRSPercent)/100);
-          const prodNCPayout= this.parseValue(data.prodNCAmount) * (this.parseValue(data.prodNCPercent)/100);
-          const prodABEPayout= this.parseValue(data.prodABEAmount) * (this.parseValue(data.prodABEPercent)/100);
+          const canvasserPayout= this.roundMoney(preliminaryProfit * (this.parseValue(data.canvasserPercent)/100));
+          const confirmerPayout= this.roundMoney(contractAmount * (this.parseValue(data.confirmerPercent)/100));
+          const elisoPayout= this.roundMoney(contractAmount * (this.parseValue(data.elisoPercent)/100));
+          const prodMSPayout= this.roundMoney(this.parseValue(data.prodMSAmount) * (this.parseValue(data.prodMSPercent)/100));
+          const prodRSPayout= this.roundMoney(this.parseValue(data.prodRSAmount) * (this.parseValue(data.prodRSPercent)/100));
+          const prodNCPayout= this.roundMoney(this.parseValue(data.prodNCAmount) * (this.parseValue(data.prodNCPercent)/100));
+          const prodABEPayout= this.roundMoney(this.parseValue(data.prodABEAmount) * (this.parseValue(data.prodABEPercent)/100));
 
-          const additionalTeamPayout= canvasserPayout + confirmerPayout + elisoPayout + prodMSPayout + prodRSPayout + prodNCPayout + prodABEPayout;
-          const totalTeamPayout= altaCalTotalPayout + additionalTeamPayout;
-          const finalProfit= preliminaryProfit - additionalTeamPayout;
+          const additionalTeamPayout= this.roundMoney(canvasserPayout + confirmerPayout + elisoPayout + prodMSPayout + prodRSPayout + prodNCPayout + prodABEPayout);
+          const totalTeamPayout= this.roundMoney(altaCalTotalPayout + additionalTeamPayout);
+          const finalProfit= this.roundMoney(preliminaryProfit - additionalTeamPayout);
           const profitPercent= totalAfterFees>0 ? (finalProfit/totalAfterFees)*100 : 0;
 
           return {
-            contractAmount, houseFeeAmount, dealerFeeAmount, creditCardFeeAmount, totalAfterFees,
+            contractAmount, netAmount, fees, feePercent, houseFeeAmount, houseFeePercent, totalAfterFees,
             afterFeesAndLabor, percentOfContract, vetRate, repRate, finalPerVetPayout, finalPerRepPayout,
             finalTotalVetsPayout, finalTotalRepsPayout, totalRideAlongPayout, altaCalTotalPayout,
             preliminaryProfit, canvasserPayout, confirmerPayout, elisoPayout, prodMSPayout, prodRSPayout,
             prodNCPayout, prodABEPayout, additionalTeamPayout, totalTeamPayout, finalProfit, profitPercent,
-            vetsCount, repsCount, numRideAlongs: this.parseValue(data.numRideAlongs), totalCollected
+            vetsCount, repsCount, numRideAlongs: this.parseValue(data.numRideAlongs), totalCollected: netAmount
           };
         },
 
         addCalculator(){
           const calc = {
             id:this.nextId++,
-            customerName:'', jobNumber:'', contractAmount:'', cashCheck:'', financeAmount:'',
-            dealerFee:'', creditCard:'', creditCardFee:'', houseFeePercent:'', laborMaterial:'',
+            customerName:'', jobNumber:'', contractAmount:'', netAmount:'', houseFeePercent:'', laborMaterial:'',
             numVets:'', numReps:'', rideAlong:'', rideAlongBonus:'', numRideAlongs:'',
             canvasserPercent:'2', confirmerPercent:'0.25', elisoPercent:'1.5',
             prodMSPercent:'0.25', prodMSAmount:'', prodRSPercent:'0.25', prodRSAmount:'',
@@ -562,24 +582,11 @@
                         </div>
                       </div>
                       <div class="form-group">
-                        <label>CASH/CHECK</label>
-                        <div class="input-with-symbol"><span>$</span><input type="number" step="0.01" value="${calc.cashCheck}" oninput="app.updateField(${calc.id}, 'cashCheck', this.value)"></div>
-                      </div>
-                      <div class="form-group">
-                        <label>LABOR & MATERIAL ${isFirst ? '(Auto-filled)' : ''}</label>
-                        <div class="input-with-symbol ${isFirst ? 'auto-filled' : ''}">
+                        <label>NET AMOUNT (What You Collected)</label>
+                        <div class="input-with-symbol">
                           <span>$</span>
-                          <input type="number" step="0.01" value="${calc.laborMaterial}" ${isFirst ? 'readonly' : 'oninput="app.updateField(' + calc.id + ', \'laborMaterial\', this.value)"'}>
+                          <input type="number" step="0.01" value="${calc.netAmount}" oninput="app.updateField(${calc.id}, 'netAmount', this.value)">
                         </div>
-                      </div>
-                      <div class="form-group">
-                        <label>FINANCE AMOUNT</label>
-                        <div class="input-with-symbol"><span>$</span><input type="number" step="0.01" value="${calc.financeAmount}" oninput="app.updateField(${calc.id}, 'financeAmount', this.value)"></div>
-                      </div>
-                      <div class="form-group">
-                        <label>DEALER FEE %</label>
-                        <input type="text" value="${calc.dealerFee}" placeholder="3.5" oninput="app.updateField(${calc.id}, 'dealerFee', this.value)">
-                        <div class="calc-display" data-calc-id="${calc.id}" data-field="dealerFeeAmount">${this.fmt(data.dealerFeeAmount)}</div>
                       </div>
                       <div class="form-group">
                         <label>HOUSE FEE % (Auto)</label>
@@ -589,13 +596,20 @@
                         <div class="calc-display" data-calc-id="${calc.id}" data-field="houseFeeAmount">${this.fmt(data.houseFeeAmount)}</div>
                       </div>
                       <div class="form-group">
-                        <label>CREDIT CARD</label>
-                        <div class="input-with-symbol"><span>$</span><input type="number" step="0.01" value="${calc.creditCard}" oninput="app.updateField(${calc.id}, 'creditCard', this.value)"></div>
+                        <label>FEES (Job Cost)</label>
+                        <div style="background:#FFEBEE;border:2px solid #EF5350;border-radius:6px;padding:12px;">
+                          <div style="font-weight:700;font-size:16px;color:#D32F2F;" data-calc-id="${calc.id}" data-field="fees">${this.fmt(data.fees)}</div>
+                          <div style="font-size:12px;color:#666;margin-top:4px;">
+                            <span data-calc-id="${calc.id}" data-field="feePercent">${(data.feePercent||0).toFixed(2)}</span>% of Contract
+                          </div>
+                        </div>
                       </div>
                       <div class="form-group">
-                        <label>CC FEE %</label>
-                        <input type="number" step="0.01" value="${calc.creditCardFee}" placeholder="3.5" oninput="app.updateField(${calc.id}, 'creditCardFee', this.value)">
-                        <div class="calc-display" data-calc-id="${calc.id}" data-field="creditCardFeeAmount">${this.fmt(data.creditCardFeeAmount)}</div>
+                        <label>LABOR & MATERIAL ${isFirst ? '(Auto-filled)' : ''}</label>
+                        <div class="input-with-symbol ${isFirst ? 'auto-filled' : ''}">
+                          <span>$</span>
+                          <input type="number" step="0.01" value="${calc.laborMaterial}" ${isFirst ? 'readonly' : 'oninput="app.updateField(' + calc.id + ', \'laborMaterial\', this.value)"'}>
+                        </div>
                       </div>
                       <div class="form-group">
                         <label>TOTAL AFTER FEES</label>
@@ -654,9 +668,85 @@
                   <div class="section-content">
                     <div style="text-align:center;padding:12px;background:#E1BEE7;border:2px solid #9C27B0;border-radius:6px;font-weight:700;margin-bottom:12px;">
                       <div style="font-size:11px;margin-bottom:4px;">ADDITIONAL TEAM TOTAL</div>
-                      <div style="font-size:18px;" data-calc-id="${calc.id}" data-field="additionalTeamPayout">${this.fmt(this.calculateOne(calc).additionalTeamPayout)}</div>
+                      <div style="font-size:18px;" data-calc-id="${calc.id}" data-field="additionalTeamPayout">${this.fmt(data.additionalTeamPayout)}</div>
                     </div>
-                    <!-- trimmed: inputs preserved in previous version -->
+                    <div class="form-grid" style="margin-bottom:15px;">
+                      <div class="form-group">
+                        <label>CANVASSER %</label>
+                        <div class="input-with-symbol"><input type="number" step="0.01" value="${calc.canvasserPercent}" oninput="app.updateField(${calc.id}, 'canvasserPercent', this.value)"><span>%</span></div>
+                        <div class="calc-display" data-calc-id="${calc.id}" data-field="canvasserPayout">${this.fmt(data.canvasserPayout)}</div>
+                      </div>
+                      <div class="form-group">
+                        <label>CONFIRMER %</label>
+                        <div class="input-with-symbol"><input type="number" step="0.01" value="${calc.confirmerPercent}" oninput="app.updateField(${calc.id}, 'confirmerPercent', this.value)"><span>%</span></div>
+                        <div class="calc-display" data-calc-id="${calc.id}" data-field="confirmerPayout">${this.fmt(data.confirmerPayout)}</div>
+                      </div>
+                      <div class="form-group">
+                        <label>ELISO %</label>
+                        <div class="input-with-symbol"><input type="number" step="0.01" value="${calc.elisoPercent}" oninput="app.updateField(${calc.id}, 'elisoPercent', this.value)"><span>%</span></div>
+                        <div class="calc-display" data-calc-id="${calc.id}" data-field="elisoPayout">${this.fmt(data.elisoPayout)}</div>
+                      </div>
+                    </div>
+                    
+                    <div style="border:2px solid #9C27B0;border-radius:8px;padding:15px;margin-bottom:10px;background:#F3E5F5;">
+                      <div style="font-weight:700;margin-bottom:10px;color:#6A1B9A;">PROD MS</div>
+                      <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;">
+                        <div class="form-group">
+                          <label>💰 DOLLAR AMOUNT (Manual Entry)</label>
+                          <div class="input-with-symbol" style="border:3px solid #9C27B0;"><span>$</span><input type="number" step="0.01" value="${calc.prodMSAmount}" oninput="app.updateField(${calc.id}, 'prodMSAmount', this.value)" onchange="app.updateField(${calc.id}, 'prodMSAmount', this.value)" placeholder="Enter amount" inputmode="decimal"></div>
+                        </div>
+                        <div class="form-group">
+                          <label>% PERCENTAGE</label>
+                          <div class="input-with-symbol"><input type="number" step="0.01" value="${calc.prodMSPercent}" oninput="app.updateField(${calc.id}, 'prodMSPercent', this.value)" onchange="app.updateField(${calc.id}, 'prodMSPercent', this.value)"><span>%</span></div>
+                          <div class="calc-display" data-calc-id="${calc.id}" data-field="prodMSPayout">${this.fmt(data.prodMSPayout)}</div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div style="border:2px solid #9C27B0;border-radius:8px;padding:15px;margin-bottom:10px;background:#F3E5F5;">
+                      <div style="font-weight:700;margin-bottom:10px;color:#6A1B9A;">PROD RS</div>
+                      <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;">
+                        <div class="form-group">
+                          <label>💰 DOLLAR AMOUNT (Manual Entry)</label>
+                          <div class="input-with-symbol" style="border:3px solid #9C27B0;"><span>$</span><input type="number" step="0.01" value="${calc.prodRSAmount}" oninput="app.updateField(${calc.id}, 'prodRSAmount', this.value)" onchange="app.updateField(${calc.id}, 'prodRSAmount', this.value)" placeholder="Enter amount" inputmode="decimal"></div>
+                        </div>
+                        <div class="form-group">
+                          <label>% PERCENTAGE</label>
+                          <div class="input-with-symbol"><input type="number" step="0.01" value="${calc.prodRSPercent}" oninput="app.updateField(${calc.id}, 'prodRSPercent', this.value)" onchange="app.updateField(${calc.id}, 'prodRSPercent', this.value)"><span>%</span></div>
+                          <div class="calc-display" data-calc-id="${calc.id}" data-field="prodRSPayout">${this.fmt(data.prodRSPayout)}</div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div style="border:2px solid #9C27B0;border-radius:8px;padding:15px;margin-bottom:10px;background:#F3E5F5;">
+                      <div style="font-weight:700;margin-bottom:10px;color:#6A1B9A;">PROD NC</div>
+                      <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;">
+                        <div class="form-group">
+                          <label>💰 DOLLAR AMOUNT (Manual Entry)</label>
+                          <div class="input-with-symbol" style="border:3px solid #9C27B0;"><span>$</span><input type="number" step="0.01" value="${calc.prodNCAmount}" oninput="app.updateField(${calc.id}, 'prodNCAmount', this.value)" onchange="app.updateField(${calc.id}, 'prodNCAmount', this.value)" placeholder="Enter amount" inputmode="decimal"></div>
+                        </div>
+                        <div class="form-group">
+                          <label>% PERCENTAGE</label>
+                          <div class="input-with-symbol"><input type="number" step="0.01" value="${calc.prodNCPercent}" oninput="app.updateField(${calc.id}, 'prodNCPercent', this.value)" onchange="app.updateField(${calc.id}, 'prodNCPercent', this.value)"><span>%</span></div>
+                          <div class="calc-display" data-calc-id="${calc.id}" data-field="prodNCPayout">${this.fmt(data.prodNCPayout)}</div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div style="border:2px solid #9C27B0;border-radius:8px;padding:15px;background:#F3E5F5;">
+                      <div style="font-weight:700;margin-bottom:10px;color:#6A1B9A;">PROD ABE</div>
+                      <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;">
+                        <div class="form-group">
+                          <label>💰 DOLLAR AMOUNT (Manual Entry)</label>
+                          <div class="input-with-symbol" style="border:3px solid #9C27B0;"><span>$</span><input type="number" step="0.01" value="${calc.prodABEAmount}" oninput="app.updateField(${calc.id}, 'prodABEAmount', this.value)" onchange="app.updateField(${calc.id}, 'prodABEAmount', this.value)" placeholder="Enter amount" inputmode="decimal"></div>
+                        </div>
+                        <div class="form-group">
+                          <label>% PERCENTAGE</label>
+                          <div class="input-with-symbol"><input type="number" step="0.01" value="${calc.prodABEPercent}" oninput="app.updateField(${calc.id}, 'prodABEPercent', this.value)" onchange="app.updateField(${calc.id}, 'prodABEPercent', this.value)"><span>%</span></div>
+                          <div class="calc-display" data-calc-id="${calc.id}" data-field="prodABEPayout">${this.fmt(data.prodABEPayout)}</div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
                 <div class="bottom-totals">
@@ -664,11 +754,11 @@
                   <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
                     <div class="big-card" style="--c1:#42A5F5;--c2:#2196F3;">
                       <div class="label">Total Payout</div>
-                      <div class="value" data-calc-id="${calc.id}" data-field="totalTeamPayout">${this.fmt(this.calculateOne(calc).totalTeamPayout)}</div>
+                      <div class="value" data-calc-id="${calc.id}" data-field="totalTeamPayout">${this.fmt(data.totalTeamPayout)}</div>
                     </div>
                     <div class="big-card" style="--c1:#AB47BC;--c2:#9C27B0;">
                       <div class="label">Total Profit</div>
-                      <div class="value" data-calc-id="${calc.id}" data-field="finalProfit">${this.fmt(this.calculateOne(calc).finalProfit)}</div>
+                      <div class="value" data-calc-id="${calc.id}" data-field="finalProfit">${this.fmt(data.finalProfit)}</div>
                     </div>
                   </div>
                 </div>
