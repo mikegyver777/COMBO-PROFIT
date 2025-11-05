@@ -1,9 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover"
+    />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
     <title>Invoice Sheet & Profit Calculator - Alta Cal</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -249,16 +252,16 @@
         .print-view { display: none; }
         
         @media (max-width: 768px) {
-            .bank-info {
-                grid-template-columns: 1fr;
-            }
-            .summary-section-invoice {
-                grid-template-columns: 1fr;
-            }
+            .bank-info { grid-template-columns: 1fr; }
+            .summary-section-invoice { grid-template-columns: 1fr; }
         }
     </style>
 </head>
 <body>
+    <noscript style="display:block;background:#ffdddd;padding:10px;text-align:center;">
+      This app requires JavaScript enabled.
+    </noscript>
+
     <div class="container">
         <div id="mainView" class="no-print">
             <div class="sticky-header">
@@ -272,7 +275,7 @@
                 
                 <div class="week-input">
                     <label style="display: block; font-weight: 700; margin-bottom: 10px;">COLLECTION WEEK PERIOD</label>
-                    <input type="text" id="collectionWeek" placeholder="10/1-10/6">
+                    <input type="text" id="collectionWeek" placeholder="10/1-10/6" autocomplete="off">
                 </div>
                 
                 <div id="summaryCards" class="summary-cards"></div>
@@ -314,81 +317,13 @@
                                 </tr>
                             </thead>
                             <tbody id="invoiceTableBody">
+                                <!-- 15 starter rows -->
+                                ${Array.from({length:15}).map(() => `
                                 <tr>
-                                    <td><input type="text" placeholder="Company name"></td>
-                                    <td><input type="number" step="0.01" class="invoice-amount" inputmode="decimal" oninput="app.calculateInvoiceTotals()"></td>
-                                    <td style="text-align: center;"><input type="checkbox"></td>
-                                </tr>
-                                <tr>
-                                    <td><input type="text" placeholder="Company name"></td>
-                                    <td><input type="number" step="0.01" class="invoice-amount" inputmode="decimal" oninput="app.calculateInvoiceTotals()"></td>
-                                    <td style="text-align: center;"><input type="checkbox"></td>
-                                </tr>
-                                <tr>
-                                    <td><input type="text" placeholder="Company name"></td>
-                                    <td><input type="number" step="0.01" class="invoice-amount" inputmode="decimal" oninput="app.calculateInvoiceTotals()"></td>
-                                    <td style="text-align: center;"><input type="checkbox"></td>
-                                </tr>
-                                <tr>
-                                    <td><input type="text" placeholder="Company name"></td>
-                                    <td><input type="number" step="0.01" class="invoice-amount" inputmode="decimal" oninput="app.calculateInvoiceTotals()"></td>
-                                    <td style="text-align: center;"><input type="checkbox"></td>
-                                </tr>
-                                <tr>
-                                    <td><input type="text" placeholder="Company name"></td>
-                                    <td><input type="number" step="0.01" class="invoice-amount" inputmode="decimal" oninput="app.calculateInvoiceTotals()"></td>
-                                    <td style="text-align: center;"><input type="checkbox"></td>
-                                </tr>
-                                <tr>
-                                    <td><input type="text" placeholder="Company name"></td>
-                                    <td><input type="number" step="0.01" class="invoice-amount" inputmode="decimal" oninput="app.calculateInvoiceTotals()"></td>
-                                    <td style="text-align: center;"><input type="checkbox"></td>
-                                </tr>
-                                <tr>
-                                    <td><input type="text" placeholder="Company name"></td>
-                                    <td><input type="number" step="0.01" class="invoice-amount" inputmode="decimal" oninput="app.calculateInvoiceTotals()"></td>
-                                    <td style="text-align: center;"><input type="checkbox"></td>
-                                </tr>
-                                <tr>
-                                    <td><input type="text" placeholder="Company name"></td>
-                                    <td><input type="number" step="0.01" class="invoice-amount" inputmode="decimal" oninput="app.calculateInvoiceTotals()"></td>
-                                    <td style="text-align: center;"><input type="checkbox"></td>
-                                </tr>
-                                <tr>
-                                    <td><input type="text" placeholder="Company name"></td>
-                                    <td><input type="number" step="0.01" class="invoice-amount" inputmode="decimal" oninput="app.calculateInvoiceTotals()"></td>
-                                    <td style="text-align: center;"><input type="checkbox"></td>
-                                </tr>
-                                <tr>
-                                    <td><input type="text" placeholder="Company name"></td>
-                                    <td><input type="number" step="0.01" class="invoice-amount" inputmode="decimal" oninput="app.calculateInvoiceTotals()"></td>
-                                    <td style="text-align: center;"><input type="checkbox"></td>
-                                </tr>
-                                <tr>
-                                    <td><input type="text" placeholder="Company name"></td>
-                                    <td><input type="number" step="0.01" class="invoice-amount" inputmode="decimal" oninput="app.calculateInvoiceTotals()"></td>
-                                    <td style="text-align: center;"><input type="checkbox"></td>
-                                </tr>
-                                <tr>
-                                    <td><input type="text" placeholder="Company name"></td>
-                                    <td><input type="number" step="0.01" class="invoice-amount" inputmode="decimal" oninput="app.calculateInvoiceTotals()"></td>
-                                    <td style="text-align: center;"><input type="checkbox"></td>
-                                </tr>
-                                <tr>
-                                    <td><input type="text" placeholder="Company name"></td>
-                                    <td><input type="number" step="0.01" class="invoice-amount" inputmode="decimal" oninput="app.calculateInvoiceTotals()"></td>
-                                    <td style="text-align: center;"><input type="checkbox"></td>
-                                </tr>
-                                <tr>
-                                    <td><input type="text" placeholder="Company name"></td>
-                                    <td><input type="number" step="0.01" class="invoice-amount" inputmode="decimal" oninput="app.calculateInvoiceTotals()"></td>
-                                    <td style="text-align: center;"><input type="checkbox"></td>
-                                </tr>
-                                <tr>
-                                    <td><input type="text" placeholder="Company name"></td>
-                                    <td><input type="number" step="0.01" class="invoice-amount" inputmode="decimal" oninput="app.calculateInvoiceTotals()"></td>
-                                    <td style="text-align: center;"><input type="checkbox"></td>
-                                </tr>
+                                  <td><input type="text" placeholder="Company name" autocomplete="off"></td>
+                                  <td><input type="number" step="0.01" class="invoice-amount" inputmode="decimal" oninput="app.calculateInvoiceTotals()"></td>
+                                  <td style="text-align: center;"><input type="checkbox"></td>
+                                </tr>`).join('')}
                             </tbody>
                         </table>
                         <button onclick="app.addInvoiceRow()" class="no-print" style="margin-top: 10px; padding: 10px 20px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; width: 100%;">+ Add Invoice Row</button>
@@ -427,7 +362,8 @@
     </div>
 
     <script>
-        const app = {
+        (function () {
+          const app = {
             calculators: [],
             nextId: 1,
             
@@ -437,19 +373,21 @@
             },
             
             fmt(value) {
-                return '$' + parseFloat(value || 0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+                const n = parseFloat(value || 0);
+                const fixed = isFinite(n) ? n.toFixed(2) : '0.00';
+                return '$' + fixed.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
             },
             
             parseValue(value) {
-                if (!value || value === '') return 0;
-                const parsed = parseFloat(value.toString().replace(/[,$]/g, ''));
+                if (value === null || value === undefined || value === '') return 0;
+                const parsed = parseFloat(String(value).replace(/[,$]/g, ''));
                 return isNaN(parsed) ? 0 : parsed;
             },
             
             parseFee(amount, fee) {
-                if (!fee || fee === '') return 0;
+                if (!fee && fee !== 0) return 0;
                 const amountVal = this.parseValue(amount);
-                const feeStr = fee.toString().trim();
+                const feeStr = String(fee).trim();
                 const percent = parseFloat(feeStr.replace('%', '')) || 0;
                 return Math.round((amountVal * percent / 100) * 100) / 100;
             },
@@ -489,7 +427,7 @@
                 const tbody = document.getElementById('invoiceTableBody');
                 const newRow = document.createElement('tr');
                 newRow.innerHTML = `
-                    <td><input type="text" placeholder="Company name"></td>
+                    <td><input type="text" placeholder="Company name" autocomplete="off"></td>
                     <td><input type="number" step="0.01" class="invoice-amount" inputmode="decimal" oninput="app.calculateInvoiceTotals()"></td>
                     <td style="text-align: center;"><input type="checkbox"></td>
                 `;
@@ -506,11 +444,8 @@
                     totalCost += value;
                 });
 
-                if (totalCost > 0) {
-                    document.getElementById('invoiceTotalCost').textContent = this.fmt(totalCost);
-                } else {
-                    document.getElementById('invoiceTotalCost').textContent = '';
-                }
+                document.getElementById('invoiceTotalCost').textContent =
+                  totalCost > 0 ? this.fmt(totalCost) : '';
                 
                 if (contractAmount > 0 && totalCost > 0) {
                     const percentage = (totalCost / contractAmount * 100).toFixed(1);
@@ -546,9 +481,9 @@
                         
                         <div style="background: #f5f5f5; padding: 20px; border-radius: 8px; margin-bottom: 25px; border: 2px solid #333;">
                             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; font-size: 14px;">
-                                <div><strong>JOB NUMBER:</strong> ${jobNumber}</div>
-                                <div><strong>CONTRACT DATE:</strong> ${contractDate}</div>
-                                <div><strong>MONEY IN BANK:</strong> ${moneyInBank}</div>
+                                <div><strong>JOB NUMBER:</strong> ${this.escape(jobNumber)}</div>
+                                <div><strong>CONTRACT DATE:</strong> ${this.escape(contractDate)}</div>
+                                <div><strong>MONEY IN BANK:</strong> ${this.escape(moneyInBank)}</div>
                                 <div><strong>CONTRACT AMOUNT:</strong> ${this.fmt(contractAmount)}</div>
                             </div>
                         </div>
@@ -566,7 +501,7 @@
                             <tbody>
                                 ${rows.map(row => `
                                     <tr>
-                                        <td style="border: 1px solid #333; padding: 8px;">${row.company || '-'}</td>
+                                        <td style="border: 1px solid #333; padding: 8px;">${this.escape(row.company) || '-'}</td>
                                         <td style="border: 1px solid #333; padding: 8px; text-align: right;">${row.cost ? this.fmt(row.cost) : '-'}</td>
                                         <td style="border: 1px solid #333; padding: 8px; text-align: center;">${row.paid ? '✓' : ''}</td>
                                     </tr>
@@ -595,6 +530,10 @@
                     window.print();
                     this.closePrint();
                 }, 100);
+            },
+
+            escape(s) {
+              return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
             },
             
             calculateOne(data) {
@@ -626,7 +565,7 @@
                 
                 const vetsCount = this.parseValue(data.numVets);
                 const repsCount = this.parseValue(data.numReps);
-                const totalPeople = vetsCount + repsCount;
+                const totalPeople = vetsCount + repsCount || 0;
                 
                 const vetCommissionTotal = (afterFeesAndLabor * vetRate) / 100;
                 const repCommissionTotal = (afterFeesAndLabor * repRate) / 100;
@@ -720,21 +659,19 @@
                 
                 document.querySelectorAll(`[data-calc-id="${calcId}"]`).forEach(el => {
                     const field = el.getAttribute('data-field');
-                    if (field && data[field] !== undefined) {
-                        el.textContent = this.fmt(data[field]);
+                    if (field && Object.prototype.hasOwnProperty.call(data, field)) {
+                        const v = data[field];
+                        el.textContent = typeof v === 'number' ? this.fmt(v) : String(v);
                     }
                 });
                 
                 const houseFeeInput = document.querySelector(`input[data-calc-id="${calcId}"][data-field="houseFeePercent"]`);
-                if (houseFeeInput) {
-                    houseFeeInput.value = calc.houseFeePercent;
-                }
+                if (houseFeeInput) houseFeeInput.value = calc.houseFeePercent;
                 
                 const tierSection = document.getElementById(`tier-section-${calcId}`);
                 if (tierSection) {
                     if (data.vetsCount > 0 || data.repsCount > 0) {
                         tierSection.style.display = 'block';
-                        
                         const tierInfo = document.getElementById(`tier-info-${calcId}`);
                         if (tierInfo) {
                             tierInfo.textContent = `Profit: ${data.percentOfContract.toFixed(1)}% → Vet: ${data.vetRate}% | Rep: ${data.repRate}%`;
@@ -1045,8 +982,8 @@
                                         </div>
                                         <div class="form-group">
                                             <label>FINANCE SOURCE</label>
-                                            <select value="${calc.financeSource}" onchange="app.updateField(${calc.id}, 'financeSource', this.value)">
-                                                <option value="">Select</option>
+                                            <select onchange="app.updateField(${calc.id}, 'financeSource', this.value)">
+                                                <option value="" ${calc.financeSource === '' ? 'selected' : ''}>Select</option>
                                                 <option value="Finance" ${calc.financeSource === 'Finance' ? 'selected' : ''}>Finance</option>
                                                 <option value="Cash" ${calc.financeSource === 'Cash' ? 'selected' : ''}>Cash</option>
                                                 <option value="Both" ${calc.financeSource === 'Both' ? 'selected' : ''}>Both</option>
@@ -1054,8 +991,8 @@
                                         </div>
                                         <div class="form-group">
                                             <label>BANK DROP DAY</label>
-                                            <select value="${calc.bankDropDay}" onchange="app.updateField(${calc.id}, 'bankDropDay', this.value)">
-                                                <option value="">Select Day</option>
+                                            <select onchange="app.updateField(${calc.id}, 'bankDropDay', this.value)">
+                                                <option value="" ${calc.bankDropDay === '' ? 'selected' : ''}>Select Day</option>
                                                 <option value="Monday" ${calc.bankDropDay === 'Monday' ? 'selected' : ''}>Monday</option>
                                                 <option value="Tuesday" ${calc.bankDropDay === 'Tuesday' ? 'selected' : ''}>Tuesday</option>
                                                 <option value="Wednesday" ${calc.bankDropDay === 'Wednesday' ? 'selected' : ''}>Wednesday</option>
@@ -1132,6 +1069,7 @@
             closePrint() {
                 document.getElementById('mainView').style.display = 'block';
                 document.getElementById('printView').style.display = 'none';
+                document.getElementById('printView').innerHTML = '';
             },
             
             showSaveDialog() {
@@ -1149,13 +1087,22 @@
                         }
                     };
                     const key = 'report_' + Date.now();
-                    localStorage.setItem(key, JSON.stringify(data));
-                    alert('Report saved!');
+                    try {
+                      localStorage.setItem(key, JSON.stringify(data));
+                      alert('Report saved!');
+                    } catch (e) {
+                      alert('Unable to save to localStorage (storage may be full or blocked).');
+                    }
                 }
             }
-        };
-        
-        window.addEventListener('DOMContentLoaded', () => app.init());
+          };
+
+          // Expose globally so inline HTML handlers (onclick/oninput) can call methods on GitHub Pages.
+          window.app = app;
+
+          // Initialize once DOM is ready
+          window.addEventListener('DOMContentLoaded', () => app.init());
+        })();
     </script>
 </body>
 </html>
