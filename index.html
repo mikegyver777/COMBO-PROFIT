@@ -243,6 +243,8 @@
             .no-print { display: none !important; }
             .print-view { display: block !important; }
             .sticky-header { position: relative !important; }
+            body { background: white; }
+            .container { max-width: 100%; }
         }
         .print-view { display: none; }
         
@@ -452,6 +454,14 @@
                 return Math.round((amountVal * percent / 100) * 100) / 100;
             },
             
+            // Auto-calculate house fee percentage based on contract amount
+            getHouseFeePercent(contractAmount) {
+                const amount = this.parseValue(contractAmount);
+                if (amount <= 20000) return 10;
+                if (amount <= 30000) return 9;
+                return 8;
+            },
+            
             // Invoice Sheet Functions
             syncJobNumber(value) {
                 if (this.calculators.length > 0) {
@@ -463,7 +473,9 @@
             syncContractAmount(value) {
                 if (this.calculators.length > 0) {
                     this.calculators[0].contractAmount = value;
-                    this.updateDisplaysOnly(this.calculators[0].id);
+                    // Auto-set house fee percentage
+                    this.calculators[0].houseFeePercent = this.getHouseFeePercent(value);
+                    this.renderAll();
                     this.updateSummary();
                 }
             },
@@ -471,7 +483,7 @@
             syncLaborMaterial(value) {
                 if (this.calculators.length > 0) {
                     this.calculators[0].laborMaterial = value;
-                    this.updateDisplaysOnly(this.calculators[0].id);
+                    this.renderAll();
                     this.updateSummary();
                 }
             },
@@ -615,6 +627,12 @@
                 const calc = this.calculators.find(c => c.id === id);
                 if (calc) {
                     calc[field] = value;
+                    
+                    // Auto-update house fee if contract amount changes
+                    if (field === 'contractAmount') {
+                        calc.houseFeePercent = this.getHouseFeePercent(value);
+                    }
+                    
                     this.updateDisplaysOnly(id);
                     this.updateSummary();
                 }
@@ -632,6 +650,12 @@
                         el.textContent = this.fmt(data[field]);
                     }
                 });
+                
+                // Update house fee input if it exists
+                const houseFeeInput = document.querySelector(`input[data-calc-id="${calcId}"][data-field="houseFeePercent"]`);
+                if (houseFeeInput) {
+                    houseFeeInput.value = calc.houseFeePercent;
+                }
                 
                 const tierSection = document.getElementById(`tier-section-${calcId}`);
                 if (tierSection) {
@@ -758,9 +782,9 @@
                                             <div class="calc-display" data-calc-id="${calc.id}" data-field="dealerFeeAmount">${this.fmt(data.dealerFeeAmount)}</div>
                                         </div>
                                         <div class="form-group">
-                                            <label>HOUSE FEE %</label>
-                                            <div class="input-with-symbol">
-                                                <input type="number" step="0.01" value="${calc.houseFeePercent}" oninput="app.updateField(${calc.id}, 'houseFeePercent', this.value)">
+                                            <label>HOUSE FEE % (Auto)</label>
+                                            <div class="input-with-symbol auto-filled">
+                                                <input type="number" step="0.01" value="${calc.houseFeePercent}" data-calc-id="${calc.id}" data-field="houseFeePercent" readonly>
                                                 <span>%</span>
                                             </div>
                                             <div class="calc-display" data-calc-id="${calc.id}" data-field="houseFeeAmount">${this.fmt(data.houseFeeAmount)}</div>
@@ -1023,11 +1047,172 @@
             },
             
             printSingle(index) {
-                window.print();
+                const calc = this.calculators[index];
+                const data = this.calculateOne(calc);
+                const week = document.getElementById('collectionWeek').value || 'Not Specified';
+                
+                const html = `
+                    <div style="padding: 30px; font-family: Arial, sans-serif;">
+                        <h1 style="text-align: center; color: #1976D2; margin-bottom: 20px;">FILE #${index + 1} - ${calc.customerName || 'N/A'}</h1>
+                        <div style="text-align: center; margin-bottom: 20px; font-size: 14px;">
+                            <strong>Job #:</strong> ${calc.jobNumber || 'N/A'} | <strong>Week:</strong> ${week}
+                        </div>
+                        
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 25px;">
+                            <div style="background: #E3F2FD; padding: 20px; border-radius: 8px; text-align: center; border: 3px solid #2196F3;">
+                                <div style="font-size: 14px; font-weight: 700; margin-bottom: 10px; color: #1976D2;">TOTAL PAYOUT</div>
+                                <div style="font-size: 32px; font-weight: 900; color: #000;">${this.fmt(data.totalTeamPayout)}</div>
+                            </div>
+                            <div style="background: #F3E5F5; padding: 20px; border-radius: 8px; text-align: center; border: 3px solid #9C27B0;">
+                                <div style="font-size: 14px; font-weight: 700; margin-bottom: 10px; color: #6A1B9A;">TOTAL PROFIT</div>
+                                <div style="font-size: 32px; font-weight: 900; color: #000;">${this.fmt(data.finalProfit)}</div>
+                            </div>
+                        </div>
+                        
+                        <div style="background: #f5f5f5; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 2px solid #333;">
+                            <h3 style="margin-bottom: 12px; font-size: 16px; color: #1565C0;">CONTRACT & PAYMENT</h3>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 13px;">
+                                <div><strong>Contract:</strong> ${this.fmt(data.contractAmount)}</div>
+                                <div><strong>House Fee (${calc.houseFeePercent}%):</strong> ${this.fmt(data.houseFeeAmount)}</div>
+                                <div><strong>Labor & Material:</strong> ${this.fmt(this.parseValue(calc.laborMaterial))}</div>
+                                <div><strong>Dealer Fee:</strong> ${this.fmt(data.dealerFeeAmount)}</div>
+                                <div style="grid-column: 1/-1; background: #BBDEFB; padding: 10px; text-align: center; font-weight: 700; border-radius: 4px;">
+                                    <strong>After House Fee:</strong> ${this.fmt(data.afterHouseFee)}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        ${data.vetsCount > 0 || data.repsCount > 0 ? `
+                            <div style="background: #f5f5f5; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 2px solid #333;">
+                                <h3 style="margin-bottom: 12px; font-size: 16px; color: #2E7D32;">ALTA CAL TEAM</h3>
+                                <div style="text-align: center; margin-bottom: 15px; padding: 10px; background: white; border-radius: 4px; font-size: 13px;">
+                                    <strong>Profit: ${data.percentOfContract.toFixed(1)}% → Vet Rate: ${data.vetRate}% | Rep Rate: ${data.repRate}%</strong>
+                                </div>
+                                <div style="display: grid; grid-template-columns: ${data.vetsCount > 0 && data.repsCount > 0 ? '1fr 1fr' : '1fr'}; gap: 15px;">
+                                    ${data.vetsCount > 0 ? `
+                                        <div style="border: 2px solid #4CAF50; padding: 12px; border-radius: 6px; background: #E8F5E9;">
+                                            <div style="font-weight: 700; margin-bottom: 8px; font-size: 14px; text-align: center;">VETS: ${data.vetsCount}</div>
+                                            <div style="font-size: 12px;"><strong>Per Vet:</strong> ${this.fmt(data.finalPerVetPayout)}</div>
+                                            <div style="font-size: 13px; font-weight: 700; margin-top: 5px;"><strong>Total:</strong> ${this.fmt(data.finalTotalVetsPayout)}</div>
+                                        </div>
+                                    ` : ''}
+                                    ${data.repsCount > 0 ? `
+                                        <div style="border: 2px solid #9C27B0; padding: 12px; border-radius: 6px; background: #F3E5F5;">
+                                            <div style="font-weight: 700; margin-bottom: 8px; font-size: 14px; text-align: center;">REPS: ${data.repsCount}</div>
+                                            <div style="font-size: 12px;"><strong>Per Rep:</strong> ${this.fmt(data.finalPerRepPayout)}</div>
+                                            <div style="font-size: 13px; font-weight: 700; margin-top: 5px;"><strong>Total:</strong> ${this.fmt(data.finalTotalRepsPayout)}</div>
+                                        </div>
+                                    ` : ''}
+                                </div>
+                                ${data.numRideAlongs > 0 ? `
+                                    <div style="margin-top: 12px; background: #FFCDD2; padding: 12px; border-radius: 4px; text-align: center; border: 2px solid #EF5350;">
+                                        <strong>Ride Alongs (${data.numRideAlongs}):</strong> ${this.fmt(data.totalRideAlongPayout)}
+                                    </div>
+                                ` : ''}
+                            </div>
+                        ` : ''}
+                        
+                        ${data.additionalTeamPayout > 0 ? `
+                            <div style="background: #f5f5f5; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 2px solid #333;">
+                                <h3 style="margin-bottom: 12px; font-size: 16px; color: #6A1B9A;">ADDITIONAL TEAM</h3>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; font-size: 12px;">
+                                    ${data.canvasserPayout > 0 ? `<div><strong>Canvasser:</strong> ${this.fmt(data.canvasserPayout)}</div>` : ''}
+                                    ${data.confirmerPayout > 0 ? `<div><strong>Confirmer:</strong> ${this.fmt(data.confirmerPayout)}</div>` : ''}
+                                    ${data.elisoPayout > 0 ? `<div><strong>Eliso:</strong> ${this.fmt(data.elisoPayout)}</div>` : ''}
+                                    ${data.prodMSPayout > 0 ? `<div><strong>Prod MS:</strong> ${this.fmt(data.prodMSPayout)}</div>` : ''}
+                                    ${data.prodRSPayout > 0 ? `<div><strong>Prod RS:</strong> ${this.fmt(data.prodRSPayout)}</div>` : ''}
+                                    ${data.prodNCPayout > 0 ? `<div><strong>Prod NC:</strong> ${this.fmt(data.prodNCPayout)}</div>` : ''}
+                                    ${data.prodABEPayout > 0 ? `<div><strong>Prod ABE:</strong> ${this.fmt(data.prodABEPayout)}</div>` : ''}
+                                </div>
+                                <div style="margin-top: 10px; background: white; padding: 10px; text-align: center; font-weight: 700; border-radius: 4px;">
+                                    Total Additional Team: ${this.fmt(data.additionalTeamPayout)}
+                                </div>
+                            </div>
+                        ` : ''}
+                        
+                        <div style="background: #FFF9C4; padding: 15px; border-radius: 8px; border: 2px solid #F57F17; font-size: 13px;">
+                            <h3 style="margin-bottom: 12px; font-size: 16px; color: #F57F17;">BANK INFO</h3>
+                            <div><strong>Money This Week:</strong> ${this.fmt(this.parseValue(calc.moneyThisWeek))}</div>
+                            <div><strong>Finance Source:</strong> ${calc.financeSource || 'Not Set'}</div>
+                            <div><strong>Bank Drop Day:</strong> ${calc.bankDropDay || 'Not Set'}</div>
+                        </div>
+                    </div>
+                `;
+                
+                document.getElementById('printView').innerHTML = html;
+                document.getElementById('mainView').style.display = 'none';
+                document.getElementById('printView').style.display = 'block';
+                
+                setTimeout(() => {
+                    window.print();
+                    this.closePrint();
+                }, 100);
             },
             
             showPrintReport() {
-                window.print();
+                const week = document.getElementById('collectionWeek').value || 'Not Specified';
+                let totalPayout = 0, totalProfit = 0, totalMoney = 0;
+                
+                const rows = this.calculators.map((calc, index) => {
+                    const data = this.calculateOne(calc);
+                    totalPayout += data.totalTeamPayout;
+                    totalProfit += data.finalProfit;
+                    totalMoney += this.parseValue(calc.moneyThisWeek);
+                    
+                    return `
+                        <tr>
+                            <td style="border: 1px solid #333; padding: 8px; text-align: center;">${index + 1}</td>
+                            <td style="border: 1px solid #333; padding: 8px;">${calc.jobNumber || '-'}</td>
+                            <td style="border: 1px solid #333; padding: 8px;">${calc.customerName || '-'}</td>
+                            <td style="border: 1px solid #333; padding: 8px; text-align: right;">${this.fmt(data.contractAmount)}</td>
+                            <td style="border: 1px solid #333; padding: 8px; text-align: right;">${this.fmt(data.totalTeamPayout)}</td>
+                            <td style="border: 1px solid #333; padding: 8px; text-align: right;">${this.fmt(data.finalProfit)}</td>
+                            <td style="border: 1px solid #333; padding: 8px; text-align: right; font-weight: 700;">${this.fmt(this.parseValue(calc.moneyThisWeek))}</td>
+                            <td style="border: 1px solid #333; padding: 8px; text-align: center;">${calc.bankDropDay || '-'}</td>
+                        </tr>
+                    `;
+                }).join('');
+                
+                const html = `
+                    <div style="padding: 30px; font-family: Arial, sans-serif;">
+                        <h1 style="text-align: center; color: #1976D2; margin-bottom: 10px;">COMBINED PROFIT REPORT</h1>
+                        <h2 style="text-align: center; color: #666; margin-bottom: 25px; font-size: 16px;">Week: ${week}</h2>
+                        
+                        <table style="width: 100%; border-collapse: collapse; border: 2px solid #000; margin-bottom: 25px; font-size: 13px;">
+                            <thead>
+                                <tr style="background: #e0e0e0;">
+                                    <th style="border: 1px solid #333; padding: 10px;">#</th>
+                                    <th style="border: 1px solid #333; padding: 10px;">Job</th>
+                                    <th style="border: 1px solid #333; padding: 10px;">Customer</th>
+                                    <th style="border: 1px solid #333; padding: 10px;">Contract</th>
+                                    <th style="border: 1px solid #333; padding: 10px;">Payout</th>
+                                    <th style="border: 1px solid #333; padding: 10px;">Profit</th>
+                                    <th style="border: 1px solid #333; padding: 10px;">This Week</th>
+                                    <th style="border: 1px solid #333; padding: 10px;">Drop Day</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${rows}
+                                <tr style="background: #FFF9C4; font-weight: 700; font-size: 14px;">
+                                    <td colspan="4" style="border: 1px solid #333; padding: 10px; text-align: right;">TOTALS:</td>
+                                    <td style="border: 1px solid #333; padding: 10px; text-align: right;">${this.fmt(totalPayout)}</td>
+                                    <td style="border: 1px solid #333; padding: 10px; text-align: right;">${this.fmt(totalProfit)}</td>
+                                    <td style="border: 1px solid #333; padding: 10px; text-align: right;">${this.fmt(totalMoney)}</td>
+                                    <td style="border: 1px solid #333; padding: 10px;"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+                
+                document.getElementById('printView').innerHTML = html;
+                document.getElementById('mainView').style.display = 'none';
+                document.getElementById('printView').style.display = 'block';
+                
+                setTimeout(() => {
+                    window.print();
+                    this.closePrint();
+                }, 100);
             },
             
             closePrint() {
