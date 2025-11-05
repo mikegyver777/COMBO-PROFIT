@@ -141,69 +141,6 @@
       </div>
 
       <div class="scrollable-content">
-        <!-- INVOICE SHEET -->
-        <div class="invoice-sheet">
-          <div class="invoice-header">📋 INVOICE SHEET</div>
-
-          <div class="invoice-section">
-            <div class="invoice-section-header" style="display:grid;grid-template-columns:auto 1fr;gap:20px;align-items:center;">
-              <div>
-                JOB NUMBER:
-                <input type="text" id="invoiceJobNumber" placeholder="Enter job number"
-                       oninput="app.syncJobNumber(this.value)"
-                       style="background:#fff;border:1px solid #666;padding:5px 10px;font-size:16px;font-weight:bold;color:#000;border-radius:3px;">
-              </div>
-              <div>MONEY IN BANK</div>
-            </div>
-
-            <div class="bank-info">
-              <div class="checkbox-container">
-                <input type="checkbox" id="moneyInBank"><label for="moneyInBank">YES</label>
-              </div>
-              <div><input type="date" id="contractDate"></div>
-              <div style="display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:center;">
-                <div style="font-weight:bold;">CONTRACT AMOUNT</div>
-                <input type="number" class="amount-display" id="invoiceContractAmount" placeholder="0.00" step="0.01" inputmode="decimal"
-                       oninput="app.syncContractAmount(this.value)" style="border:1px solid #999;">
-              </div>
-            </div>
-          </div>
-
-          <div class="invoice-section">
-            <div class="invoice-section-header">INVOICE AMOUNT</div>
-            <table class="invoice-table">
-              <thead>
-                <tr>
-                  <th style="width:50%;">LABOR & MATERIAL</th>
-                  <th style="width:35%;">COST</th>
-                  <th style="width:15%;">PAID</th>
-                </tr>
-              </thead>
-              <tbody id="invoiceTableBody"></tbody>
-            </table>
-            <button onclick="app.addInvoiceRow()" class="no-print"
-                    style="margin-top:10px;padding:10px 20px;background:#4CAF50;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:16px;width:100%;">+ Add Invoice Row</button>
-          </div>
-
-          <div class="invoice-section">
-            <div class="summary-section-invoice">
-              <div class="summary-item-invoice">
-                <div class="summary-label-invoice">LABOR & MATERIAL COST</div>
-                <div class="summary-value-invoice" id="invoiceTotalCost"></div>
-              </div>
-              <div class="summary-item-invoice">
-                <div class="summary-label-invoice">JOB COST PERCENTAGE</div>
-                <div class="summary-value-invoice" id="invoiceCostPercentage"></div>
-              </div>
-            </div>
-          </div>
-
-          <button onclick="app.printInvoiceSheet()" class="no-print"
-                  style="margin-top:15px;padding:12px 24px;background:#2196F3;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:16px;width:100%;font-weight:700;">🖨️ Print Invoice Sheet</button>
-        </div>
-
-        <div class="divider"></div>
-
         <!-- PROFIT CALCULATORS -->
         <div id="calculators"></div>
 
@@ -296,33 +233,13 @@
         getHouseFeePercent(contractAmount){ const a=this.parseValue(contractAmount); if(a<=20000) return 10; if(a<=30000) return 9; return 8; },
 
         init() {
-          // Guard DOM existence
-          if (!document.getElementById('invoiceTableBody')) { window.__showErr && window.__showErr('DOM not ready'); return; }
-          seedInvoiceRows(15);
           this.addCalculator();
           this.updateSummary();
           const boot = document.getElementById('boot'); if (boot) boot.textContent = 'OK';
         },
 
-        /* Invoice sync */
-        syncJobNumber(v){ if(this.calculators.length){ this.calculators[0].jobNumber=v; this.renderAll(); } },
-        syncContractAmount(v){ if(this.calculators.length){ this.calculators[0].contractAmount=v; this.calculators[0].houseFeePercent=this.getHouseFeePercent(v); this.renderAll(); this.updateSummary(); } },
-        syncLaborMaterial(v){ if(this.calculators.length){ this.calculators[0].laborMaterial=v; this.renderAll(); this.updateSummary(); } },
-
-        addInvoiceRow(){ const tbody=document.getElementById('invoiceTableBody'); if(tbody) tbody.appendChild(createInvoiceRow()); },
-        calculateInvoiceTotals(){
-          const caEl=document.getElementById('invoiceContractAmount');
-          const tcEl=document.getElementById('invoiceTotalCost');
-          const pcEl=document.getElementById('invoiceCostPercentage');
-          if(!caEl||!tcEl||!pcEl){ return; }
-          const contractAmount=this.parseValue(caEl.value);
-          const amountInputs=document.querySelectorAll('.invoice-amount');
-          let totalCost=0;
-          amountInputs.forEach(input=> totalCost+=this.parseValue(input.value));
-          tcEl.textContent = totalCost>0 ? this.fmt(totalCost) : '';
-          pcEl.textContent = (contractAmount>0 && totalCost>0) ? (totalCost/contractAmount*100).toFixed(1)+'%' : '';
-          this.syncLaborMaterial(totalCost);
-        },
+        addInvoiceRow(){ /* Legacy method - each file has its own invoice now */ },
+        calculateInvoiceTotals(){ /* Legacy method - each file has its own invoice now */ },
 
         calculateOne(data){
           const contractAmount=this.roundMoney(this.parseValue(data.contractAmount));
@@ -402,7 +319,9 @@
             canvasserPercent:'2', confirmerPercent:'0.25', elisoPercent:'1.5',
             prodMSPercent:'0.25', prodMSAmount:'', prodRSPercent:'0.25', prodRSAmount:'',
             prodNCPercent:'0.25', prodNCAmount:'', prodABEPercent:'0.25', prodABEAmount:'',
-            moneyThisWeek:'', financeSource:'', bankDropDay:''
+            moneyThisWeek:'', financeSource:'', bankDropDay:'',
+            contractDate:'', moneyInBank:false,
+            invoiceRows: Array(15).fill(null).map(() => ({ company:'', cost:'', paid:false }))
           };
           this.calculators.push(calc);
           this.renderAll();
@@ -416,6 +335,42 @@
           calc[field]=value;
           if(field==='contractAmount') calc.houseFeePercent=this.getHouseFeePercent(value);
           this.updateDisplaysOnly(id);
+          this.updateSummary();
+        },
+
+        updateInvoiceRow(calcId, rowIndex, field, value){
+          const calc = this.calculators.find(c => c.id === calcId);
+          if(!calc || !calc.invoiceRows[rowIndex]) return;
+          calc.invoiceRows[rowIndex][field] = value;
+          this.calculateFileInvoice(calcId);
+        },
+
+        addInvoiceRowToFile(calcId){
+          const calc = this.calculators.find(c => c.id === calcId);
+          if(!calc) return;
+          calc.invoiceRows.push({ company:'', cost:'', paid:false });
+          this.renderAll();
+        },
+
+        calculateFileInvoice(calcId){
+          const calc = this.calculators.find(c => c.id === calcId);
+          if(!calc) return;
+          let totalCost = 0;
+          calc.invoiceRows.forEach(row => {
+            totalCost += this.parseValue(row.cost);
+          });
+          calc.laborMaterial = totalCost.toString();
+          
+          const contractAmount = this.parseValue(calc.contractAmount);
+          const costPercentage = contractAmount > 0 && totalCost > 0 ? (totalCost / contractAmount * 100).toFixed(1) + '%' : '';
+          
+          // Update display
+          const costEl = document.getElementById(`invoice-total-cost-${calcId}`);
+          const pctEl = document.getElementById(`invoice-cost-pct-${calcId}`);
+          if(costEl) costEl.textContent = totalCost > 0 ? this.fmt(totalCost) : '';
+          if(pctEl) pctEl.textContent = costPercentage;
+          
+          this.updateDisplaysOnly(calcId);
           this.updateSummary();
         },
 
@@ -474,19 +429,59 @@
           const deleteBtn=this.calculators.length>1 ? `<button class="delete-btn no-print" onclick="app.deleteCalculator(${calc.id})">×</button>` : '';
           const showTiers = data.vetsCount>0 || data.repsCount>0;
           const isFirst = index===0;
+          
+          const invoiceSection = `
+            <div class="invoice-sheet" style="margin:20px;">
+              <div class="invoice-header">📋 INVOICE SHEET - FILE #${index + 1}</div>
+              <div class="invoice-section">
+                <div class="invoice-section-header" style="display:grid;grid-template-columns:auto 1fr;gap:20px;align-items:center;">
+                  <div>JOB NUMBER: <input type="text" value="${calc.jobNumber}" oninput="app.updateField(${calc.id}, 'jobNumber', this.value)" style="background:#fff;border:1px solid #666;padding:5px 10px;font-size:16px;font-weight:bold;color:#000;border-radius:3px;"></div>
+                  <div>MONEY IN BANK</div>
+                </div>
+                <div class="bank-info">
+                  <div class="checkbox-container"><input type="checkbox" id="moneyInBank-${calc.id}" ${calc.moneyInBank ? 'checked' : ''} onchange="app.updateField(${calc.id}, 'moneyInBank', this.checked)"><label for="moneyInBank-${calc.id}">YES</label></div>
+                  <div><input type="date" value="${calc.contractDate || ''}" onchange="app.updateField(${calc.id}, 'contractDate', this.value)"></div>
+                  <div style="display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:center;">
+                    <div style="font-weight:bold;">CONTRACT AMOUNT</div>
+                    <input type="number" class="amount-display" value="${calc.contractAmount}" placeholder="0.00" step="0.01" inputmode="decimal" oninput="app.updateField(${calc.id}, 'contractAmount', this.value)" style="border:1px solid #999;">
+                  </div>
+                </div>
+              </div>
+              <div class="invoice-section">
+                <div class="invoice-section-header">INVOICE AMOUNT</div>
+                <table class="invoice-table">
+                  <thead><tr><th style="width:50%;">LABOR & MATERIAL</th><th style="width:35%;">COST</th><th style="width:15%;">PAID</th></tr></thead>
+                  <tbody>
+                    ${calc.invoiceRows.map((row, rowIdx) => `
+                      <tr>
+                        <td><input type="text" value="${row.company}" oninput="app.updateInvoiceRow(${calc.id}, ${rowIdx}, 'company', this.value)" autocomplete="off"></td>
+                        <td><input type="number" step="0.01" value="${row.cost}" inputmode="decimal" oninput="app.updateInvoiceRow(${calc.id}, ${rowIdx}, 'cost', this.value)"></td>
+                        <td style="text-align:center;"><input type="checkbox" ${row.paid ? 'checked' : ''} onchange="app.updateInvoiceRow(${calc.id}, ${rowIdx}, 'paid', this.checked)"></td>
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                </table>
+                <button onclick="app.addInvoiceRowToFile(${calc.id})" class="no-print" style="margin-top:10px;padding:10px 20px;background:#4CAF50;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:16px;width:100%;">+ Add Invoice Row</button>
+              </div>
+              <div class="invoice-section">
+                <div class="summary-section-invoice">
+                  <div class="summary-item-invoice"><div class="summary-label-invoice">LABOR & MATERIAL COST</div><div class="summary-value-invoice" id="invoice-total-cost-${calc.id}">${calc.laborMaterial ? this.fmt(this.parseValue(calc.laborMaterial)) : ''}</div></div>
+                  <div class="summary-item-invoice"><div class="summary-label-invoice">JOB COST PERCENTAGE</div><div class="summary-value-invoice" id="invoice-cost-pct-${calc.id}">${calc.contractAmount && calc.laborMaterial ? (this.parseValue(calc.laborMaterial)/this.parseValue(calc.contractAmount)*100).toFixed(1)+'%' : ''}</div></div>
+                </div>
+              </div>
+            </div>
+          `;
+          
           return `
             <div class="calculator">
               ${deleteBtn}
               <div class="calc-header">
-                <h2 style="font-size:18px;font-weight:700;">FILE #${index + 1}${isFirst ? ' (FROM INVOICE SHEET)' : ''}</h2>
+                <h2 style="font-size:18px;font-weight:700;">FILE #${index + 1}</h2>
                 <button class="btn btn-blue no-print" onclick="app.printSingle(${index})" style="padding:10px 16px;">🖨️</button>
               </div>
+              ${invoiceSection}
               <div class="calc-section">
                 <div class="form-grid" style="margin-bottom:20px;">
-                  <div class="form-group">
-                    <label>JOB NUMBER ${isFirst ? '(Auto-filled)' : ''}</label>
-                    <input type="text" value="${calc.jobNumber}" ${isFirst ? 'class="auto-filled" readonly' : 'oninput="app.updateField(' + calc.id + ', \'jobNumber\', this.value)"'}>
-                  </div>
                   <div class="form-group">
                     <label>CUSTOMER NAME</label>
                     <input type="text" value="${calc.customerName}" oninput="app.updateField(${calc.id}, 'customerName', this.value)">
@@ -497,10 +492,10 @@
                   <div class="section-content">
                     <div class="form-grid">
                       <div class="form-group">
-                        <label>CONTRACT AMOUNT ${isFirst ? '(Auto-filled)' : ''}</label>
-                        <div class="input-with-symbol ${isFirst ? 'auto-filled' : ''}">
+                        <label>CONTRACT AMOUNT (From Invoice Above)</label>
+                        <div class="input-with-symbol auto-filled">
                           <span>$</span>
-                          <input type="number" step="0.01" value="${calc.contractAmount}" ${isFirst ? 'readonly' : 'oninput="app.updateField(' + calc.id + ', \'contractAmount\', this.value)"'}>
+                          <input type="number" step="0.01" value="${calc.contractAmount}" readonly>
                         </div>
                       </div>
                       <div class="form-group">
@@ -527,10 +522,10 @@
                         </div>
                       </div>
                       <div class="form-group">
-                        <label>LABOR & MATERIAL ${isFirst ? '(Auto-filled)' : ''}</label>
-                        <div class="input-with-symbol ${isFirst ? 'auto-filled' : ''}">
+                        <label>LABOR & MATERIAL (From Invoice Above)</label>
+                        <div class="input-with-symbol auto-filled">
                           <span>$</span>
-                          <input type="number" step="0.01" value="${calc.laborMaterial}" ${isFirst ? 'readonly' : 'oninput="app.updateField(' + calc.id + ', \'laborMaterial\', this.value)"'}>
+                          <input type="number" step="0.01" value="${calc.laborMaterial}" readonly>
                         </div>
                       </div>
                       <div class="form-group">
