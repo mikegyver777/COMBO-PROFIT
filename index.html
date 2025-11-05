@@ -34,7 +34,6 @@
         .header h1 { color: #1976D2; font-size: 24px; margin-bottom: 15px; }
         .header-buttons { display: flex; gap: 10px; flex-wrap: wrap; }
         
-        /* Invoice Sheet Styles */
         .invoice-sheet {
             background: white;
             border: 3px solid #2196F3;
@@ -82,6 +81,12 @@
             display: flex;
             align-items: center;
             gap: 10px;
+        }
+        
+        input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
         }
         
         .amount-display {
@@ -307,13 +312,81 @@
                                 </tr>
                             </thead>
                             <tbody id="invoiceTableBody">
-                                ${Array(15).fill(0).map(() => `
-                                    <tr>
-                                        <td><input type="text" placeholder="Company name"></td>
-                                        <td><input type="number" step="0.01" class="invoice-amount" inputmode="decimal" oninput="app.calculateInvoiceTotals()"></td>
-                                        <td style="text-align: center;"><input type="checkbox"></td>
-                                    </tr>
-                                `).join('')}
+                                <tr>
+                                    <td><input type="text" placeholder="Company name"></td>
+                                    <td><input type="number" step="0.01" class="invoice-amount" inputmode="decimal" oninput="app.calculateInvoiceTotals()"></td>
+                                    <td style="text-align: center;"><input type="checkbox"></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" placeholder="Company name"></td>
+                                    <td><input type="number" step="0.01" class="invoice-amount" inputmode="decimal" oninput="app.calculateInvoiceTotals()"></td>
+                                    <td style="text-align: center;"><input type="checkbox"></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" placeholder="Company name"></td>
+                                    <td><input type="number" step="0.01" class="invoice-amount" inputmode="decimal" oninput="app.calculateInvoiceTotals()"></td>
+                                    <td style="text-align: center;"><input type="checkbox"></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" placeholder="Company name"></td>
+                                    <td><input type="number" step="0.01" class="invoice-amount" inputmode="decimal" oninput="app.calculateInvoiceTotals()"></td>
+                                    <td style="text-align: center;"><input type="checkbox"></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" placeholder="Company name"></td>
+                                    <td><input type="number" step="0.01" class="invoice-amount" inputmode="decimal" oninput="app.calculateInvoiceTotals()"></td>
+                                    <td style="text-align: center;"><input type="checkbox"></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" placeholder="Company name"></td>
+                                    <td><input type="number" step="0.01" class="invoice-amount" inputmode="decimal" oninput="app.calculateInvoiceTotals()"></td>
+                                    <td style="text-align: center;"><input type="checkbox"></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" placeholder="Company name"></td>
+                                    <td><input type="number" step="0.01" class="invoice-amount" inputmode="decimal" oninput="app.calculateInvoiceTotals()"></td>
+                                    <td style="text-align: center;"><input type="checkbox"></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" placeholder="Company name"></td>
+                                    <td><input type="number" step="0.01" class="invoice-amount" inputmode="decimal" oninput="app.calculateInvoiceTotals()"></td>
+                                    <td style="text-align: center;"><input type="checkbox"></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" placeholder="Company name"></td>
+                                    <td><input type="number" step="0.01" class="invoice-amount" inputmode="decimal" oninput="app.calculateInvoiceTotals()"></td>
+                                    <td style="text-align: center;"><input type="checkbox"></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" placeholder="Company name"></td>
+                                    <td><input type="number" step="0.01" class="invoice-amount" inputmode="decimal" oninput="app.calculateInvoiceTotals()"></td>
+                                    <td style="text-align: center;"><input type="checkbox"></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" placeholder="Company name"></td>
+                                    <td><input type="number" step="0.01" class="invoice-amount" inputmode="decimal" oninput="app.calculateInvoiceTotals()"></td>
+                                    <td style="text-align: center;"><input type="checkbox"></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" placeholder="Company name"></td>
+                                    <td><input type="number" step="0.01" class="invoice-amount" inputmode="decimal" oninput="app.calculateInvoiceTotals()"></td>
+                                    <td style="text-align: center;"><input type="checkbox"></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" placeholder="Company name"></td>
+                                    <td><input type="number" step="0.01" class="invoice-amount" inputmode="decimal" oninput="app.calculateInvoiceTotals()"></td>
+                                    <td style="text-align: center;"><input type="checkbox"></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" placeholder="Company name"></td>
+                                    <td><input type="number" step="0.01" class="invoice-amount" inputmode="decimal" oninput="app.calculateInvoiceTotals()"></td>
+                                    <td style="text-align: center;"><input type="checkbox"></td>
+                                </tr>
+                                <tr>
+                                    <td><input type="text" placeholder="Company name"></td>
+                                    <td><input type="number" step="0.01" class="invoice-amount" inputmode="decimal" oninput="app.calculateInvoiceTotals()"></td>
+                                    <td style="text-align: center;"><input type="checkbox"></td>
+                                </tr>
                             </tbody>
                         </table>
                         <button onclick="app.addInvoiceRow()" class="no-print" style="margin-top: 10px; padding: 10px 20px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; width: 100%;">+ Add Invoice Row</button>
@@ -623,7 +696,7 @@
             
             renderCalculator(calc, index) {
                 const data = this.calculateOne(calc);
-                const deleteBtn = this.calculators.length > 1 ? `<button class="delete-btn" onclick="app.deleteCalculator(${calc.id})">×</button>` : '';
+                const deleteBtn = this.calculators.length > 1 ? `<button class="delete-btn no-print" onclick="app.deleteCalculator(${calc.id})">×</button>` : '';
                 const showTiers = data.vetsCount > 0 || data.repsCount > 0;
                 const isFirst = index === 0;
                 
@@ -632,7 +705,7 @@
                         ${deleteBtn}
                         <div class="calc-header">
                             <h2 style="font-size: 18px; font-weight: 700;">FILE #${index + 1}${isFirst ? ' (FROM INVOICE SHEET)' : ''}</h2>
-                            <button class="btn btn-blue" onclick="app.printSingle(${index})" style="padding: 10px 16px;">🖨️</button>
+                            <button class="btn btn-blue no-print" onclick="app.printSingle(${index})" style="padding: 10px 16px;">🖨️</button>
                         </div>
                         
                         <div class="calc-section">
@@ -950,14 +1023,10 @@
             },
             
             printSingle(index) {
-                // Similar to original code - truncated for length
-                alert('Print single file functionality - press Ctrl+P or Cmd+P');
                 window.print();
             },
             
             showPrintReport() {
-                // Similar to original code - truncated for length
-                alert('Print report functionality - press Ctrl+P or Cmd+P');
                 window.print();
             },
             
