@@ -93,7 +93,7 @@
     .tier-box .tier-value { font-size:18px; font-weight:700; }
 
     @media print {
-      @page { size: legal portrait; margin: 5mm; }
+      @page { size: legal landscape; margin: 10mm; }
       .no-print { display:none !important; }
       .print-view { display:block !important; }
       .sticky-header { position:relative !important; }
@@ -255,112 +255,22 @@
 
       function buildFilePrintHTML(app, calc, index) {
         const data = app.calculateOne(calc);
-        const hdr = `
-          <h2 style="margin:0 0 8px 0;color:#1976D2;">FILE #${index + 1}${index===0 ? ' (FROM INVOICE SHEET)' : ''}</h2>
-          <div style="font-size:13px;color:#333;margin-bottom:16px;">
-            <strong>Job #:</strong> ${app.escape(calc.jobNumber || '—')}
-            &nbsp;•&nbsp; <strong>Customer:</strong> ${app.escape(calc.customerName || '—')}
-            &nbsp;•&nbsp; <strong>Bank Drop Day:</strong> ${app.escape(calc.bankDropDay || '—')}
-            &nbsp;•&nbsp; <strong>Finance Source:</strong> ${app.escape(calc.financeSource || '—')}
-          </div>
+        const rowColor = index % 2 === 0 ? '#fafafa' : '#fff';
+        return `
+          <tr style="background:${rowColor};border-bottom:1px solid #e0e0e0;">
+            <td style="padding:10px 12px;font-weight:600;font-size:11px;color:#333;">${app.escape(calc.jobNumber || '—')}</td>
+            <td style="padding:10px 12px;font-size:11px;color:#555;">${app.escape(calc.customerName || '—')}</td>
+            <td style="padding:10px 12px;text-align:right;font-weight:600;font-size:11px;color:#333;">${app.fmt(app.parseValue(calc.laborMaterial))}</td>
+            <td style="padding:10px 12px;text-align:right;font-weight:600;font-size:11px;color:#2E7D32;">${app.fmt(data.finalTotalVetsPayout)}</td>
+            <td style="padding:10px 12px;text-align:right;font-weight:600;font-size:11px;color:#6A1B9A;">${app.fmt(data.finalTotalRepsPayout)}</td>
+            <td style="padding:10px 12px;text-align:right;font-weight:600;font-size:11px;color:#D32F2F;">${app.fmt(data.totalRideAlongPayout)}</td>
+            <td style="padding:10px 12px;text-align:right;font-weight:600;font-size:11px;color:#9C27B0;">${app.fmt(data.additionalTeamPayout)}</td>
+            <td style="padding:10px 12px;text-align:right;font-weight:700;font-size:11px;color:#E65100;">${app.fmt(app.parseValue(calc.moneyThisWeek))}</td>
+            <td style="padding:10px 12px;font-weight:600;font-size:10px;color:#FF6F00;">${app.formatBankDropDay(calc.bankDropDay)}</td>
+            <td style="padding:10px 12px;text-align:right;font-weight:700;font-size:11px;background:#E8F4FD;color:#1565C0;">${app.fmt(data.totalTeamPayout)}</td>
+            <td style="padding:10px 12px;text-align:right;font-weight:700;font-size:11px;background:#F8F0FB;color:#7B1FA2;">${app.fmt(data.finalProfit)}</td>
+          </tr>
         `;
-        const money = `
-          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:16px;">
-            <div style="border:2px solid #666;border-radius:8px;padding:12px;background:#f5f5f5;">
-              <div style="font-size:11px;font-weight:700;">Contract Amount</div>
-              <div style="font-size:16px;font-weight:900;">${app.fmt(data.contractAmount)}</div>
-            </div>
-            <div style="border:2px solid #1976D2;border-radius:8px;padding:12px;background:#E3F2FD;">
-              <div style="font-size:11px;font-weight:700;">Net Amount</div>
-              <div style="font-size:16px;font-weight:900;">${app.fmt(data.netAmount)}</div>
-            </div>
-            <div style="border:2px solid #FF9800;border-radius:8px;padding:12px;background:#FFF3E0;">
-              <div style="font-size:11px;font-weight:700;">House Fee</div>
-              <div style="font-size:16px;font-weight:900;">${app.fmt(data.houseFeeAmount)}</div>
-              <div style="font-size:9px;color:#666;margin-top:2px;">${data.houseFeePercent}%</div>
-            </div>
-            <div style="border:2px solid #EF5350;border-radius:8px;padding:12px;background:#FFEBEE;">
-              <div style="font-size:11px;font-weight:700;">Fees (Job Cost)</div>
-              <div style="font-size:16px;font-weight:900;">${app.fmt(data.fees)}</div>
-              <div style="font-size:9px;color:#666;margin-top:2px;">${(data.feePercent||0).toFixed(1)}%</div>
-            </div>
-            <div style="border:2px solid #4CAF50;border-radius:8px;padding:12px;background:#E8F5E9;">
-              <div style="font-size:11px;font-weight:700;">Labor & Material</div>
-              <div style="font-size:16px;font-weight:900;">${app.fmt(app.parseValue(calc.laborMaterial))}</div>
-            </div>
-            <div style="border:2px solid #9C27B0;border-radius:8px;padding:12px;background:#F3E5F5;">
-              <div style="font-size:11px;font-weight:700;">Final Profit</div>
-              <div style="font-size:16px;font-weight:900;">${app.fmt(data.finalProfit)}</div>
-            </div>
-          </div>
-        `;
-        const rows = [];
-        if (data.vetsCount > 0) {
-          rows.push(`
-            <tr>
-              <td style="border:1px solid #333;padding:8px;">Vets</td>
-              <td style="border:1px solid #333;padding:8px;text-align:center;">${data.vetsCount}</td>
-              <td style="border:1px solid #333;padding:8px;text-align:right;">${app.fmt(data.finalPerVetPayout)}</td>
-              <td style="border:1px solid #333;padding:8px;text-align:right;">${app.fmt(data.finalTotalVetsPayout)}</td>
-            </tr>
-          `);
-        }
-        if (data.repsCount > 0) {
-          rows.push(`
-            <tr>
-              <td style="border:1px solid #333;padding:8px;">Reps</td>
-              <td style="border:1px solid #333;padding:8px;text-align:center;">${data.repsCount}</td>
-              <td style="border:1px solid #333;padding:8px;text-align:right;">${app.fmt(data.finalPerRepPayout)}</td>
-              <td style="border:1px solid #333;padding:8px;text-align:right;">${app.fmt(data.finalTotalRepsPayout)}</td>
-            </tr>
-          `);
-        }
-        const numRA = app.parseValue(calc.numRideAlongs);
-        if (numRA > 0 || app.parseValue(data.totalRideAlongPayout) > 0) {
-          rows.push(`
-            <tr>
-              <td style="border:1px solid #333;padding:8px;">Ride-Along</td>
-              <td style="border:1px solid #333;padding:8px;text-align:center;">${numRA}</td>
-              <td style="border:1px solid #333;padding:8px;text-align:right;">—</td>
-              <td style="border:1px solid #333;padding:8px;text-align:right;">${app.fmt(data.totalRideAlongPayout)}</td>
-            </tr>
-          `);
-        }
-        const team = rows.length
-          ? `
-            <h3 style="margin:16px 0 8px 0;">Team Payouts</h3>
-            <table style="width:100%;border-collapse:collapse;font-size:13px;">
-              <thead>
-                <tr style="background:#f0f0f0;">
-                  <th style="border:1px solid #333;padding:8px;text-align:left;">Role</th>
-                  <th style="border:1px solid #333;padding:8px;text-align:center;">Count</th>
-                  <th style="border:1px solid #333;padding:8px;text-align:right;">Per Person</th>
-                  <th style="border:1px solid #333;padding:8px;text-align:right;">Total</th>
-                </tr>
-              </thead>
-              <tbody>${rows.join('')}</tbody>
-            </table>
-            <div style="font-size:12px;margin-top:8px;color:#333;">
-              Vet Rate: ${data.vetRate}% &nbsp;•&nbsp; Rep Rate: ${data.repRate}% &nbsp;•&nbsp; Profit Basis: ${data.percentOfContract.toFixed(1)}%
-            </div>
-          `
-          : `
-            <h3 style="margin:16px 0 8px 0;">Team Payouts</h3>
-            <div style="font-size:13px;color:#333;">No Vets/Reps/Ride-Alongs noted.</div>
-          `;
-        const totals = `
-          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-top:16px;">
-            <div style="border:3px solid #1976D2;border-radius:10px;padding:16px;background:linear-gradient(135deg,#1976D2,#0D47A1);color:#fff;">
-              <div style="font-weight:700;text-transform:uppercase;font-size:12px;margin-bottom:6px;">Total Team Payout</div>
-              <div style="font-size:26px;font-weight:900;">${app.fmt(data.totalTeamPayout)}</div>
-            </div>
-            <div style="border:3px solid #9C27B0;border-radius:10px;padding:16px;background:linear-gradient(135deg,#9C27B0,#6A1B9A);color:#fff;">
-              <div style="font-weight:700;text-transform:uppercase;font-size:12px;margin-bottom:6px;">Final Profit</div>
-              <div style="font-size:26px;font-weight:900;">${app.fmt(data.finalProfit)}</div>
-            </div>
-          </div>
-        `;
-        return `<section style="page-break-inside:avoid;border:2px solid #ddd;border-radius:10px;padding:16px;margin-bottom:20px;">${hdr}${money}${team}${totals}</section>`;
       }
 
       const app = {
@@ -368,6 +278,18 @@
         nextId: 1,
 
         escape(s){ return String(s).replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m])); },
+        formatBankDropDay(dateStr){
+          if(!dateStr) return '—';
+          try{
+            const date = new Date(dateStr + 'T00:00:00');
+            const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+            const dayName = days[date.getDay()];
+            const month = date.getMonth() + 1;
+            const day = date.getDate();
+            const year = String(date.getFullYear()).slice(-2);
+            return `${dayName} ${month}/${day}/${year}`;
+          }catch(e){ return dateStr; }
+        },
         fmt(v){ const n=parseFloat(v||0); const f=isFinite(n)?n.toFixed(2):'0.00'; return '$'+f.replace(/\B(?=(\d{3})+(?!\d))/g,','); },
         parseValue(v){ if(v===null||v===undefined||v==='') return 0; const p=parseFloat(String(v).replace(/[,$]/g,'')); return isNaN(p)?0:p; },
         roundMoney(v){ return Math.round((v||0) * 100) / 100; },
@@ -747,6 +669,17 @@
                         </div>
                       </div>
                     </div>
+                    
+                    <div class="form-grid" style="margin-top:15px;border:3px solid #FF9800;border-radius:8px;padding:15px;background:#FFF3E0;">
+                      <div class="form-group">
+                        <label style="color:#E65100;font-weight:700;">💰 MONEY THIS WEEK</label>
+                        <div class="input-with-symbol" style="border:3px solid #FF9800;"><span>$</span><input type="number" step="0.01" value="${calc.moneyThisWeek}" oninput="app.updateField(${calc.id}, 'moneyThisWeek', this.value)" onchange="app.updateField(${calc.id}, 'moneyThisWeek', this.value)" placeholder="Amount to receive" inputmode="decimal"></div>
+                      </div>
+                      <div class="form-group">
+                        <label style="color:#E65100;font-weight:700;">📅 BANK DROP DAY</label>
+                        <input type="date" value="${calc.bankDropDay}" oninput="app.updateField(${calc.id}, 'bankDropDay', this.value)" style="padding:12px;border:3px solid #FF9800;border-radius:6px;font-size:16px;">
+                      </div>
+                    </div>
                   </div>
                 </div>
                 <div class="bottom-totals">
@@ -859,15 +792,84 @@
         showPrintReport(){
           try{
             const week=(document.getElementById('collectionWeek')||{}).value||'—';
+            
+            // Sort files by bank drop day (chronological order by actual date)
+            const sortedCalcs = [...this.calculators].sort((a, b) => {
+              const dateA = a.bankDropDay ? new Date(a.bankDropDay + 'T00:00:00') : new Date('9999-12-31');
+              const dateB = b.bankDropDay ? new Date(b.bankDropDay + 'T00:00:00') : new Date('9999-12-31');
+              return dateA - dateB;
+            });
+            
+            // Calculate grand totals
+            let grandTotalJobCost = 0;
+            let grandTotalVetPayout = 0;
+            let grandTotalRepPayout = 0;
+            let grandTotalRideAlongPayout = 0;
+            let grandTotalAdditionalTeam = 0;
+            let grandTotalMoneyToReceive = 0;
+            let grandTotalTeamPayout = 0;
+            let grandTotalProfit = 0;
+            
+            sortedCalcs.forEach(c => {
+              const data = this.calculateOne(c);
+              grandTotalJobCost += this.parseValue(c.laborMaterial);
+              grandTotalVetPayout += data.finalTotalVetsPayout;
+              grandTotalRepPayout += data.finalTotalRepsPayout;
+              grandTotalRideAlongPayout += data.totalRideAlongPayout;
+              grandTotalAdditionalTeam += data.additionalTeamPayout;
+              grandTotalMoneyToReceive += this.parseValue(c.moneyThisWeek);
+              grandTotalTeamPayout += data.totalTeamPayout;
+              grandTotalProfit += data.finalProfit;
+            });
+            
             const header=`
-              <h1 style="text-align:center;color:#2196F3;margin:0 0 8px 0;border-bottom:3px solid #2196F3;padding-bottom:12px;">
-                Combined Report – Payout Sheets
-              </h1>
-              <div style="text-align:center;font-size:14px;margin-bottom:16px;">
-                Collection Week: <strong>${this.escape(week)}</strong>
+              <div style="text-align:center;margin-bottom:20px;">
+                <h1 style="color:#1976D2;margin:0 0 5px 0;font-size:24px;font-weight:700;">📊 Payout Report</h1>
+                <div style="font-size:13px;color:#666;">Week: <strong>${this.escape(week)}</strong></div>
               </div>`;
-            const sections = this.calculators.map((c,i)=>buildFilePrintHTML(this,c,i)).join('');
-            const html = `<div style="padding:24px;font-family:Arial,sans-serif;">${header}${sections}</div>`;
+            
+            const tableRows = sortedCalcs.map((c, i) => buildFilePrintHTML(this, c, this.calculators.indexOf(c))).join('');
+            
+            const grandTotalsRow = `
+              <tr style="background:linear-gradient(135deg,#FFF9C4,#FFF59D);border-top:2px solid #FBC02D;">
+                <td colspan="2" style="padding:12px;font-weight:900;font-size:12px;text-align:center;color:#F57F17;">TOTALS</td>
+                <td style="padding:12px;text-align:right;font-weight:900;font-size:12px;color:#333;">${this.fmt(grandTotalJobCost)}</td>
+                <td style="padding:12px;text-align:right;font-weight:900;font-size:12px;color:#2E7D32;">${this.fmt(grandTotalVetPayout)}</td>
+                <td style="padding:12px;text-align:right;font-weight:900;font-size:12px;color:#6A1B9A;">${this.fmt(grandTotalRepPayout)}</td>
+                <td style="padding:12px;text-align:right;font-weight:900;font-size:12px;color:#D32F2F;">${this.fmt(grandTotalRideAlongPayout)}</td>
+                <td style="padding:12px;text-align:right;font-weight:900;font-size:12px;color:#9C27B0;">${this.fmt(grandTotalAdditionalTeam)}</td>
+                <td style="padding:12px;text-align:right;font-weight:900;font-size:12px;color:#E65100;">${this.fmt(grandTotalMoneyToReceive)}</td>
+                <td style="padding:12px;text-align:center;font-weight:900;font-size:11px;color:#FF6F00;">ALL</td>
+                <td style="padding:12px;text-align:right;font-weight:900;font-size:12px;background:#C5E1F5;color:#1565C0;">${this.fmt(grandTotalTeamPayout)}</td>
+                <td style="padding:12px;text-align:right;font-weight:900;font-size:12px;background:#E6D4F0;color:#7B1FA2;">${this.fmt(grandTotalProfit)}</td>
+              </tr>
+            `;
+            
+            const table = `
+              <table style="width:100%;border-collapse:collapse;border-radius:8px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+                <thead>
+                  <tr style="background:linear-gradient(135deg,#42A5F5,#2196F3);color:#fff;">
+                    <th style="padding:12px;font-weight:700;text-align:left;font-size:11px;border-bottom:2px solid #1976D2;">JOB#</th>
+                    <th style="padding:12px;font-weight:700;text-align:left;font-size:11px;border-bottom:2px solid #1976D2;">CUSTOMER</th>
+                    <th style="padding:12px;font-weight:700;text-align:right;font-size:11px;border-bottom:2px solid #1976D2;">JOB COST</th>
+                    <th style="padding:12px;font-weight:700;text-align:right;font-size:11px;border-bottom:2px solid #1976D2;">VET</th>
+                    <th style="padding:12px;font-weight:700;text-align:right;font-size:11px;border-bottom:2px solid #1976D2;">REP</th>
+                    <th style="padding:12px;font-weight:700;text-align:right;font-size:11px;border-bottom:2px solid #1976D2;">R/A</th>
+                    <th style="padding:12px;font-weight:700;text-align:right;font-size:11px;border-bottom:2px solid #1976D2;">ADD TEAM</th>
+                    <th style="padding:12px;font-weight:700;text-align:right;font-size:11px;border-bottom:2px solid #1976D2;">💰 RECEIVE</th>
+                    <th style="padding:12px;font-weight:700;text-align:left;font-size:11px;border-bottom:2px solid #1976D2;">DROP DAY</th>
+                    <th style="padding:12px;font-weight:700;text-align:right;font-size:11px;border-bottom:2px solid #1976D2;background:rgba(255,255,255,0.1);">TEAM TOT</th>
+                    <th style="padding:12px;font-weight:700;text-align:right;font-size:11px;border-bottom:2px solid #1976D2;background:rgba(255,255,255,0.1);">PROFIT</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${tableRows}
+                  ${grandTotalsRow}
+                </tbody>
+              </table>
+            `;
+            
+            const html = `<div style="padding:10px;font-family:Arial,sans-serif;">${header}${table}</div>`;
             document.getElementById('printView').innerHTML=html;
             document.getElementById('mainView').style.display='none';
             document.getElementById('printView').style.display='block';
