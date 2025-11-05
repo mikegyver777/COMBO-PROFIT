@@ -1,1108 +1,155 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover"
-    />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <title>Invoice Sheet & Profit Calculator - Alta Cal</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; background: #f5f5f5; padding: 0; }
-        input, select, button { font-size: 16px !important; }
-        input::-webkit-outer-spin-button,
-        input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-        input[type=number] { -moz-appearance: textfield; }
-        
-        .sticky-header {
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            background: #f5f5f5;
-            padding: 15px 15px 10px 15px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        
-        .container { max-width: 1400px; margin: 0 auto; }
-        .scrollable-content { padding: 0 15px 15px 15px; }
-        
-        .btn { padding: 14px 24px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; touch-action: manipulation; }
-        .btn-primary { background: #4CAF50; color: white; }
-        .btn-blue { background: #2196F3; color: white; }
-        .btn-red { background: #EF5350; color: white; }
-        
-        .header { background: white; border-radius: 12px; padding: 20px; margin-bottom: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .header h1 { color: #1976D2; font-size: 24px; margin-bottom: 15px; }
-        .header-buttons { display: flex; gap: 10px; flex-wrap: wrap; }
-        
-        .invoice-sheet {
-            background: white;
-            border: 3px solid #2196F3;
-            border-radius: 12px;
-            padding: 15px;
-            margin-bottom: 20px;
-        }
-        
-        .invoice-header {
-            background: #2196F3;
-            color: white;
-            padding: 10px;
-            margin: -15px -15px 15px -15px;
-            border-radius: 9px 9px 0 0;
-            text-align: center;
-            font-size: 18px;
-            font-weight: 700;
-        }
-        
-        .invoice-section {
-            margin-bottom: 10px;
-            border: 2px solid #333;
-            padding: 8px;
-            background-color: #fff;
-        }
-        
-        .invoice-section-header {
-            background-color: #000;
-            color: white;
-            padding: 6px 10px;
-            font-weight: bold;
-            margin: -8px -8px 8px -8px;
-            font-size: 14px;
-        }
-        
-        .bank-info {
-            display: grid;
-            grid-template-columns: auto 1fr auto;
-            gap: 10px;
-            align-items: center;
-            margin-bottom: 5px;
-        }
-        
-        .checkbox-container {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        input[type="checkbox"] {
-            width: 20px;
-            height: 20px;
-            cursor: pointer;
-        }
-        
-        .amount-display {
-            font-size: 24px;
-            font-weight: bold;
-            color: #000;
-            padding: 8px;
-            background-color: #f0f0f0;
-            border: 1px solid #999;
-            text-align: right;
-        }
-        
-        .invoice-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 5px;
-        }
-        
-        .invoice-table th, .invoice-table td {
-            border: 1px solid #333;
-            padding: 4px 6px;
-            text-align: left;
-        }
-        
-        .invoice-table th {
-            background-color: #f0f0f0;
-            font-weight: bold;
-            font-size: 13px;
-        }
-        
-        .invoice-table td input {
-            border: none;
-            background: transparent;
-            width: 100%;
-            padding: 2px;
-            font-size: 13px;
-        }
-        
-        .summary-section-invoice {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-top: 8px;
-        }
-        
-        .summary-item-invoice {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-        
-        .summary-label-invoice {
-            font-weight: bold;
-            background-color: #000;
-            color: white;
-            padding: 8px;
-            text-align: center;
-            font-size: 13px;
-        }
-        
-        .summary-value-invoice {
-            background-color: #f0f0f0;
-            border: 1px solid #999;
-            padding: 10px;
-            text-align: center;
-            font-weight: bold;
-            font-size: 20px;
-            min-height: 45px;
-        }
-        
-        .auto-filled {
-            background-color: #E3F2FD !important;
-            border: 2px solid #2196F3 !important;
-        }
-        
-        .week-input { background: white; padding: 15px; border-radius: 12px; margin-bottom: 15px; text-align: center; }
-        .week-input input { font-size: 16px; padding: 12px; border: 2px solid #2196F3; border-radius: 6px; width: 100%; max-width: 400px; }
-        
-        .summary-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 0; }
-        .summary-card { background: linear-gradient(135deg, var(--c1), var(--c2)); padding: 15px; border-radius: 8px; color: white; text-align: center; }
-        .summary-card.blue { --c1: #42A5F5; --c2: #2196F3; }
-        .summary-card.purple { --c1: #AB47BC; --c2: #9C27B0; }
-        .summary-card.green { --c1: #4CAF50; --c2: #45a049; }
-        .summary-card.red { --c1: #EF5350; --c2: #E53935; }
-        .summary-card .label { font-size: 11px; font-weight: 600; margin-bottom: 5px; }
-        .summary-card .value { font-size: 20px; font-weight: 700; }
-        
-        .calculator { background: white; border: 3px solid #ccc; border-radius: 12px; margin-bottom: 20px; position: relative; }
-        .calc-header { background: #BBDEFB; padding: 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #000; }
-        .delete-btn { position: absolute; top: -10px; right: -10px; background: #EF5350; color: white; border: none; border-radius: 50%; width: 32px; height: 32px; font-size: 20px; cursor: pointer; z-index: 10; }
-        
-        .calc-section { padding: 20px; }
-        .section { margin-bottom: 20px; border: 3px solid #e0e0e0; border-radius: 8px; }
-        .section-header { padding: 12px; font-weight: 600; text-align: center; }
-        .section-header.blue { background: #BBDEFB; color: #1565C0; }
-        .section-header.green { background: #C8E6C9; color: #2E7D32; }
-        .section-header.purple { background: #E1BEE7; color: #6A1B9A; }
-        .section-header.yellow { background: #FFF9C4; color: #F57F17; }
-        .section-content { padding: 15px; background: #fafafa; }
-        
-        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; }
-        .form-group { display: flex; flex-direction: column; }
-        .form-group label { font-size: 12px; font-weight: 600; margin-bottom: 6px; color: #555; }
-        .form-group input, .form-group select { padding: 12px; border: 2px solid #e0e0e0; border-radius: 6px; font-size: 16px; }
-        
-        .input-with-symbol { display: flex; align-items: center; background: white; border: 2px solid #e0e0e0; border-radius: 6px; padding: 0 12px; }
-        .input-with-symbol input { border: none; flex: 1; padding: 12px 0; text-align: right; font-size: 16px; }
-        
-        .big-card { background: linear-gradient(135deg, var(--c1), var(--c2)); color: white; padding: 30px; text-align: center; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
-        .big-card .label { font-size: 16px; font-weight: 700; margin-bottom: 12px; text-transform: uppercase; }
-        .big-card .value { font-size: 40px; font-weight: 900; line-height: 1.2; }
-        
-        .add-btn { background: #2196F3; color: white; font-weight: 700; padding: 18px 35px; border-radius: 50px; border: none; font-size: 16px; cursor: pointer; display: flex; align-items: center; gap: 12px; margin: 20px auto; }
-        
-        .tier-results { background: white; padding: 12px; border-radius: 6px; border: 2px solid #e0e0e0; margin-top: 10px; }
-        .tier-info { text-align: center; font-size: 11px; font-weight: 600; padding: 8px; background: #f5f5f5; border-radius: 4px; margin-bottom: 10px; }
-        .tier-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
-        .tier-person { border: 2px solid #e0e0e0; border-radius: 6px; padding: 12px; }
-        .tier-box { text-align: center; padding: 10px; border-radius: 4px; margin-bottom: 6px; }
-        .tier-box.light { background: #f5f5f5; border: 1px solid #ddd; }
-        .tier-box.bold { background: #e8f5e9; border: 2px solid #4CAF50; }
-        .tier-box.purple-light { background: #f3e5f5; border: 1px solid #ddd; }
-        .tier-box.purple-bold { background: #f3e5f5; border: 2px solid #9C27B0; }
-        .tier-box .tier-label { font-size: 10px; font-weight: 600; margin-bottom: 4px; }
-        .tier-box .tier-value { font-size: 18px; font-weight: 700; }
-        
-        .calc-display { background: #f0f0f0; padding: 8px; border-radius: 4px; text-align: center; font-weight: 600; margin-top: 5px; }
-        
-        .bottom-totals { 
-            background: linear-gradient(135deg, #1976D2, #0D47A1); 
-            border: 4px solid #0D47A1; 
-            border-radius: 12px; 
-            padding: 25px; 
-            margin-top: 25px; 
-            box-shadow: 0 6px 20px rgba(0,0,0,0.4);
-        }
-        .bottom-totals h3 { 
-            color: white; 
-            text-align: center; 
-            font-size: 18px; 
-            margin-bottom: 20px; 
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        
-        .divider {
-            height: 4px;
-            background: linear-gradient(to right, #2196F3, #4CAF50, #9C27B0);
-            margin: 30px 0;
-            border-radius: 2px;
-        }
-        
-        @media print {
-            .no-print { display: none !important; }
-            .print-view { display: block !important; }
-            .sticky-header { position: relative !important; }
-            body { background: white; }
-            .container { max-width: 100%; }
-        }
-        .print-view { display: none; }
-        
-        @media (max-width: 768px) {
-            .bank-info { grid-template-columns: 1fr; }
-            .summary-section-invoice { grid-template-columns: 1fr; }
-        }
-    </style>
-</head>
-<body>
-    <noscript style="display:block;background:#ffdddd;padding:10px;text-align:center;">
-      This app requires JavaScript enabled.
-    </noscript>
-
-    <div class="container">
-        <div id="mainView" class="no-print">
-            <div class="sticky-header">
-                <div class="header">
-                    <h1>ALTA CAL - INVOICE & PROFIT SYSTEM</h1>
-                    <div class="header-buttons">
-                        <button class="btn btn-primary" onclick="app.showSaveDialog()">💾 SAVE</button>
-                        <button class="btn btn-blue" onclick="app.showPrintReport()">🖨️ PRINT REPORT</button>
-                    </div>
-                </div>
-                
-                <div class="week-input">
-                    <label style="display: block; font-weight: 700; margin-bottom: 10px;">COLLECTION WEEK PERIOD</label>
-                    <input type="text" id="collectionWeek" placeholder="10/1-10/6" autocomplete="off">
-                </div>
-                
-                <div id="summaryCards" class="summary-cards"></div>
-            </div>
-            
-            <div class="scrollable-content">
-                <!-- INVOICE SHEET -->
-                <div class="invoice-sheet">
-                    <div class="invoice-header">📋 INVOICE SHEET</div>
-                    
-                    <div class="invoice-section">
-                        <div class="invoice-section-header" style="display: grid; grid-template-columns: auto 1fr; gap: 20px; align-items: center;">
-                            <div>JOB NUMBER: <input type="text" id="invoiceJobNumber" value="" placeholder="Enter job number" oninput="app.syncJobNumber(this.value)" style="background: white; border: 1px solid #666; padding: 5px 10px; font-size: 16px; font-weight: bold; color: #000; border-radius: 3px;"></div>
-                            <div>MONEY IN BANK</div>
-                        </div>
-                        <div class="bank-info">
-                            <div class="checkbox-container">
-                                <input type="checkbox" id="moneyInBank">
-                                <label for="moneyInBank">YES</label>
-                            </div>
-                            <div>
-                                <input type="date" id="contractDate" value="">
-                            </div>
-                            <div style="display: grid; grid-template-columns: auto 1fr; gap: 10px; align-items: center;">
-                                <div style="font-weight: bold;">CONTRACT AMOUNT</div>
-                                <input type="number" class="amount-display" id="invoiceContractAmount" value="" placeholder="0.00" step="0.01" inputmode="decimal" oninput="app.syncContractAmount(this.value)" style="border: 1px solid #999;">
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="invoice-section">
-                        <div class="invoice-section-header">INVOICE AMOUNT</div>
-                        <table class="invoice-table">
-                            <thead>
-                                <tr>
-                                    <th style="width: 50%;">LABOR & MATERIAL</th>
-                                    <th style="width: 35%;">COST</th>
-                                    <th style="width: 15%;">PAID</th>
-                                </tr>
-                            </thead>
-                            <tbody id="invoiceTableBody">
-                                <!-- 15 starter rows -->
-                                ${Array.from({length:15}).map(() => `
-                                <tr>
-                                  <td><input type="text" placeholder="Company name" autocomplete="off"></td>
-                                  <td><input type="number" step="0.01" class="invoice-amount" inputmode="decimal" oninput="app.calculateInvoiceTotals()"></td>
-                                  <td style="text-align: center;"><input type="checkbox"></td>
-                                </tr>`).join('')}
-                            </tbody>
-                        </table>
-                        <button onclick="app.addInvoiceRow()" class="no-print" style="margin-top: 10px; padding: 10px 20px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; width: 100%;">+ Add Invoice Row</button>
-                    </div>
-
-                    <div class="invoice-section">
-                        <div class="summary-section-invoice">
-                            <div class="summary-item-invoice">
-                                <div class="summary-label-invoice">LABOR & MATERIAL COST</div>
-                                <div class="summary-value-invoice" id="invoiceTotalCost"></div>
-                            </div>
-                            <div class="summary-item-invoice">
-                                <div class="summary-label-invoice">JOB COST PERCENTAGE</div>
-                                <div class="summary-value-invoice" id="invoiceCostPercentage"></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <button onclick="app.printInvoiceSheet()" class="no-print" style="margin-top: 15px; padding: 12px 24px; background-color: #2196F3; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; width: 100%; font-weight: 700;">🖨️ Print Invoice Sheet</button>
-                </div>
-                
-                <div class="divider"></div>
-                
-                <!-- PROFIT CALCULATORS -->
-                <div id="calculators"></div>
-                
-                <div style="text-align: center;" class="no-print">
-                    <button class="add-btn" onclick="app.addCalculator()">
-                        <span style="font-size: 24px;">+</span> ADD NEW FILE
-                    </button>
-                </div>
-            </div>
-        </div>
-        
-        <div id="printView" class="print-view"></div>
+<script>
+/* --- ADD this helper inside the IIFE where app is defined --- */
+function buildFilePrintHTML(app, calc, index) {
+  const data = app.calculateOne(calc);
+  const hdr = `
+    <h2 style="margin:0 0 8px 0;color:#1976D2;">FILE #${index + 1}${index===0 ? ' (FROM INVOICE SHEET)' : ''}</h2>
+    <div style="font-size:13px;color:#333;margin-bottom:16px;">
+      <strong>Job #:</strong> ${app.escape(calc.jobNumber || '—')}
+      &nbsp;•&nbsp; <strong>Customer:</strong> ${app.escape(calc.customerName || '—')}
+      &nbsp;•&nbsp; <strong>Bank Drop Day:</strong> ${app.escape(calc.bankDropDay || '—')}
+      &nbsp;•&nbsp; <strong>Finance Source:</strong> ${app.escape(calc.financeSource || '—')}
     </div>
+  `;
 
-    <script>
-        (function () {
-          const app = {
-            calculators: [],
-            nextId: 1,
-            
-            init() {
-                this.addCalculator();
-                this.updateSummary();
-            },
-            
-            fmt(value) {
-                const n = parseFloat(value || 0);
-                const fixed = isFinite(n) ? n.toFixed(2) : '0.00';
-                return '$' + fixed.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-            },
-            
-            parseValue(value) {
-                if (value === null || value === undefined || value === '') return 0;
-                const parsed = parseFloat(String(value).replace(/[,$]/g, ''));
-                return isNaN(parsed) ? 0 : parsed;
-            },
-            
-            parseFee(amount, fee) {
-                if (!fee && fee !== 0) return 0;
-                const amountVal = this.parseValue(amount);
-                const feeStr = String(fee).trim();
-                const percent = parseFloat(feeStr.replace('%', '')) || 0;
-                return Math.round((amountVal * percent / 100) * 100) / 100;
-            },
-            
-            getHouseFeePercent(contractAmount) {
-                const amount = this.parseValue(contractAmount);
-                if (amount <= 20000) return 10;
-                if (amount <= 30000) return 9;
-                return 8;
-            },
-            
-            syncJobNumber(value) {
-                if (this.calculators.length > 0) {
-                    this.calculators[0].jobNumber = value;
-                    this.renderAll();
-                }
-            },
-            
-            syncContractAmount(value) {
-                if (this.calculators.length > 0) {
-                    this.calculators[0].contractAmount = value;
-                    this.calculators[0].houseFeePercent = this.getHouseFeePercent(value);
-                    this.renderAll();
-                    this.updateSummary();
-                }
-            },
-            
-            syncLaborMaterial(value) {
-                if (this.calculators.length > 0) {
-                    this.calculators[0].laborMaterial = value;
-                    this.renderAll();
-                    this.updateSummary();
-                }
-            },
-            
-            addInvoiceRow() {
-                const tbody = document.getElementById('invoiceTableBody');
-                const newRow = document.createElement('tr');
-                newRow.innerHTML = `
-                    <td><input type="text" placeholder="Company name" autocomplete="off"></td>
-                    <td><input type="number" step="0.01" class="invoice-amount" inputmode="decimal" oninput="app.calculateInvoiceTotals()"></td>
-                    <td style="text-align: center;"><input type="checkbox"></td>
-                `;
-                tbody.appendChild(newRow);
-            },
-            
-            calculateInvoiceTotals() {
-                const contractAmount = this.parseValue(document.getElementById('invoiceContractAmount').value);
-                const amountInputs = document.querySelectorAll('.invoice-amount');
-                let totalCost = 0;
+  const money = `
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-bottom:16px;">
+      <div style="border:2px solid #1976D2;border-radius:8px;padding:12px;background:#E3F2FD;">
+        <div style="font-size:12px;font-weight:700;">Total Collected (After Fees)</div>
+        <div style="font-size:20px;font-weight:900;">${app.fmt(data.totalAfterFees)}</div>
+      </div>
+      <div style="border:2px solid #4CAF50;border-radius:8px;padding:12px;background:#E8F5E9;">
+        <div style="font-size:12px;font-weight:700;">Labor & Material</div>
+        <div style="font-size:20px;font-weight:900;">${app.fmt(app.parseValue(calc.laborMaterial))}</div>
+      </div>
+      <div style="border:2px solid #9C27B0;border-radius:8px;padding:12px;background:#F3E5F5;">
+        <div style="font-size:12px;font-weight:700;">Final Profit</div>
+        <div style="font-size:20px;font-weight:900;">${app.fmt(data.finalProfit)}</div>
+      </div>
+    </div>
+  `;
 
-                amountInputs.forEach(input => {
-                    const value = this.parseValue(input.value);
-                    totalCost += value;
-                });
+  const team = `
+    <h3 style="margin:16px 0 8px 0;">Team Payouts</h3>
+    <table style="width:100%;border-collapse:collapse;font-size:13px;">
+      <thead>
+        <tr style="background:#f0f0f0;">
+          <th style="border:1px solid #333;padding:8px;text-align:left;">Role</th>
+          <th style="border:1px solid #333;padding:8px;text-align:center;">Count</th>
+          <th style="border:1px solid #333;padding:8px;text-align:right;">Per Person</th>
+          <th style="border:1px solid #333;padding:8px;text-align:right;">Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="border:1px solid #333;padding:8px;">Vets</td>
+          <td style="border:1px solid #333;padding:8px;text-align:center;">${data.vetsCount}</td>
+          <td style="border:1px solid #333;padding:8px;text-align:right;">${app.fmt(data.finalPerVetPayout)}</td>
+          <td style="border:1px solid #333;padding:8px;text-align:right;">${app.fmt(data.finalTotalVetsPayout)}</td>
+        </tr>
+        <tr>
+          <td style="border:1px solid #333;padding:8px;">Reps</td>
+          <td style="border:1px solid #333;padding:8px;text-align:center;">${data.repsCount}</td>
+          <td style="border:1px solid #333;padding:8px;text-align:right;">${app.fmt(data.finalPerRepPayout)}</td>
+          <td style="border:1px solid #333;padding:8px;text-align:right;">${app.fmt(data.finalTotalRepsPayout)}</td>
+        </tr>
+        <tr>
+          <td style="border:1px solid #333;padding:8px;">Ride-Along</td>
+          <td style="border:1px solid #333;padding:8px;text-align:center;">${app.parseValue(calc.numRideAlongs)}</td>
+          <td style="border:1px solid #333;padding:8px;text-align:right;">—</td>
+          <td style="border:1px solid #333;padding:8px;text-align:right;">${app.fmt(data.totalRideAlongPayout)}</td>
+        </tr>
+      </tbody>
+    </table>
+    <div style="font-size:12px;margin-top:8px;color:#333;">
+      Vet Rate: ${data.vetRate}% &nbsp;•&nbsp; Rep Rate: ${data.repRate}% &nbsp;•&nbsp;
+      Profit Basis: ${data.percentOfContract.toFixed(1)}%
+    </div>
+  `;
 
-                document.getElementById('invoiceTotalCost').textContent =
-                  totalCost > 0 ? this.fmt(totalCost) : '';
-                
-                if (contractAmount > 0 && totalCost > 0) {
-                    const percentage = (totalCost / contractAmount * 100).toFixed(1);
-                    document.getElementById('invoiceCostPercentage').textContent = percentage + '%';
-                } else {
-                    document.getElementById('invoiceCostPercentage').textContent = '';
-                }
+  const totals = `
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-top:16px;">
+      <div style="border:3px solid #1976D2;border-radius:10px;padding:16px;background:linear-gradient(135deg,#1976D2,#0D47A1);color:#fff;">
+        <div style="font-weight:700;text-transform:uppercase;font-size:12px;margin-bottom:6px;">Total Team Payout</div>
+        <div style="font-size:26px;font-weight:900;">${app.fmt(data.totalTeamPayout)}</div>
+      </div>
+      <div style="border:3px solid #9C27B0;border-radius:10px;padding:16px;background:linear-gradient(135deg,#9C27B0,#6A1B9A);color:#fff;">
+        <div style="font-weight:700;text-transform:uppercase;font-size:12px;margin-bottom:6px;">Final Profit</div>
+        <div style="font-size:26px;font-weight:900;">${app.fmt(data.finalProfit)}</div>
+      </div>
+    </div>
+  `;
 
-                this.syncLaborMaterial(totalCost);
-            },
-            
-            printInvoiceSheet() {
-                const jobNumber = document.getElementById('invoiceJobNumber').value || 'N/A';
-                const contractAmount = document.getElementById('invoiceContractAmount').value || '0';
-                const contractDate = document.getElementById('contractDate').value || 'Not Set';
-                const moneyInBank = document.getElementById('moneyInBank').checked ? 'YES' : 'NO';
-                
-                const rows = Array.from(document.querySelectorAll('#invoiceTableBody tr')).map(row => {
-                    const inputs = row.querySelectorAll('input');
-                    return {
-                        company: inputs[0].value,
-                        cost: inputs[1].value,
-                        paid: inputs[2].checked
-                    };
-                }).filter(row => row.company || row.cost);
-                
-                const totalCost = document.getElementById('invoiceTotalCost').textContent || '$0.00';
-                const costPercentage = document.getElementById('invoiceCostPercentage').textContent || '0%';
-                
-                const html = `
-                    <div style="padding: 30px; font-family: Arial, sans-serif;">
-                        <h1 style="text-align: center; color: #2196F3; margin-bottom: 30px; border-bottom: 3px solid #2196F3; padding-bottom: 15px;">📋 INVOICE SHEET</h1>
-                        
-                        <div style="background: #f5f5f5; padding: 20px; border-radius: 8px; margin-bottom: 25px; border: 2px solid #333;">
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; font-size: 14px;">
-                                <div><strong>JOB NUMBER:</strong> ${this.escape(jobNumber)}</div>
-                                <div><strong>CONTRACT DATE:</strong> ${this.escape(contractDate)}</div>
-                                <div><strong>MONEY IN BANK:</strong> ${this.escape(moneyInBank)}</div>
-                                <div><strong>CONTRACT AMOUNT:</strong> ${this.fmt(contractAmount)}</div>
-                            </div>
-                        </div>
-                        
-                        <h2 style="background: #000; color: white; padding: 12px; margin-bottom: 15px; font-size: 16px;">INVOICE AMOUNT</h2>
-                        
-                        <table style="width: 100%; border-collapse: collapse; margin-bottom: 25px; font-size: 13px;">
-                            <thead>
-                                <tr style="background: #f0f0f0;">
-                                    <th style="border: 1px solid #333; padding: 10px; text-align: left;">LABOR & MATERIAL</th>
-                                    <th style="border: 1px solid #333; padding: 10px; text-align: right; width: 150px;">COST</th>
-                                    <th style="border: 1px solid #333; padding: 10px; text-align: center; width: 80px;">PAID</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${rows.map(row => `
-                                    <tr>
-                                        <td style="border: 1px solid #333; padding: 8px;">${this.escape(row.company) || '-'}</td>
-                                        <td style="border: 1px solid #333; padding: 8px; text-align: right;">${row.cost ? this.fmt(row.cost) : '-'}</td>
-                                        <td style="border: 1px solid #333; padding: 8px; text-align: center;">${row.paid ? '✓' : ''}</td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
-                        
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 30px;">
-                            <div style="background: #f0f0f0; padding: 20px; border-radius: 8px; text-align: center; border: 2px solid #333;">
-                                <div style="font-weight: 700; font-size: 14px; margin-bottom: 10px;">LABOR & MATERIAL COST</div>
-                                <div style="font-size: 28px; font-weight: 900;">${totalCost}</div>
-                            </div>
-                            <div style="background: #f0f0f0; padding: 20px; border-radius: 8px; text-align: center; border: 2px solid #333;">
-                                <div style="font-weight: 700; font-size: 14px; margin-bottom: 10px;">JOB COST PERCENTAGE</div>
-                                <div style="font-size: 28px; font-weight: 900;">${costPercentage}</div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-                
-                document.getElementById('printView').innerHTML = html;
-                document.getElementById('mainView').style.display = 'none';
-                document.getElementById('printView').style.display = 'block';
-                
-                setTimeout(() => {
-                    window.print();
-                    this.closePrint();
-                }, 100);
-            },
+  return `
+    <section style="page-break-inside:avoid;border:2px solid #ddd;border-radius:10px;padding:16px;margin-bottom:20px;">
+      ${hdr}
+      ${money}
+      ${team}
+      ${totals}
+    </section>
+  `;
+}
 
-            escape(s) {
-              return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-            },
-            
-            calculateOne(data) {
-                const contractAmount = this.parseValue(data.contractAmount);
-                const cashCheck = this.parseValue(data.cashCheck);
-                const financeAmount = this.parseValue(data.financeAmount);
-                const creditCard = this.parseValue(data.creditCard);
-                const laborMaterial = this.parseValue(data.laborMaterial);
-                
-                const houseFeePercent = this.parseValue(data.houseFeePercent);
-                const houseFeeAmount = (contractAmount * houseFeePercent) / 100;
-                const dealerFeeAmount = this.parseFee(data.financeAmount, data.dealerFee);
-                const creditCardFeeAmount = this.parseFee(data.creditCard, data.creditCardFee);
-                
-                const totalCollected = cashCheck + financeAmount + creditCard;
-                const totalAfterFees = totalCollected - houseFeeAmount - dealerFeeAmount - creditCardFeeAmount;
-                const afterFeesAndLabor = totalAfterFees - laborMaterial;
-                const percentOfContract = totalAfterFees > 0 ? (afterFeesAndLabor / totalAfterFees) * 100 : 0;
-                
-                let vetRate = 25;
-                if (percentOfContract >= 50) vetRate = 55;
-                else if (percentOfContract >= 40) vetRate = 45;
-                else if (percentOfContract >= 33) vetRate = 35;
-                
-                let repRate = 20;
-                if (percentOfContract >= 50) repRate = 40;
-                else if (percentOfContract >= 40) repRate = 30;
-                else if (percentOfContract >= 33) repRate = 25;
-                
-                const vetsCount = this.parseValue(data.numVets);
-                const repsCount = this.parseValue(data.numReps);
-                const totalPeople = vetsCount + repsCount || 0;
-                
-                const vetCommissionTotal = (afterFeesAndLabor * vetRate) / 100;
-                const repCommissionTotal = (afterFeesAndLabor * repRate) / 100;
-                
-                const perVetPayout = totalPeople > 0 ? (vetCommissionTotal / totalPeople) : 0;
-                const perRepPayout = totalPeople > 0 ? (repCommissionTotal / totalPeople) : 0;
-                
-                const rideAlongFeeAmount = this.parseValue(data.rideAlong);
-                const rideAlongFeePerPerson = totalPeople > 0 ? rideAlongFeeAmount / totalPeople : 0;
-                const creditCardFeePerPerson = totalPeople > 0 ? creditCardFeeAmount / totalPeople : 0;
-                
-                const finalPerVetPayout = perVetPayout - rideAlongFeePerPerson - creditCardFeePerPerson;
-                const finalPerRepPayout = perRepPayout - rideAlongFeePerPerson - creditCardFeePerPerson;
-                const finalTotalVetsPayout = finalPerVetPayout * vetsCount;
-                const finalTotalRepsPayout = finalPerRepPayout * repsCount;
-                
-                const rideAlongBonusAmount = this.parseValue(data.rideAlongBonus);
-                const totalRideAlongPayout = rideAlongFeeAmount + rideAlongBonusAmount;
-                
-                const altaCalTotalPayout = laborMaterial + finalTotalVetsPayout + finalTotalRepsPayout + totalRideAlongPayout;
-                const preliminaryProfit = totalAfterFees - altaCalTotalPayout;
-                
-                const canvasserPayout = preliminaryProfit * (this.parseValue(data.canvasserPercent) / 100);
-                const confirmerPayout = contractAmount * (this.parseValue(data.confirmerPercent) / 100);
-                const elisoPayout = contractAmount * (this.parseValue(data.elisoPercent) / 100);
-                const prodMSPayout = this.parseValue(data.prodMSAmount) * (this.parseValue(data.prodMSPercent) / 100);
-                const prodRSPayout = this.parseValue(data.prodRSAmount) * (this.parseValue(data.prodRSPercent) / 100);
-                const prodNCPayout = this.parseValue(data.prodNCAmount) * (this.parseValue(data.prodNCPercent) / 100);
-                const prodABEPayout = this.parseValue(data.prodABEAmount) * (this.parseValue(data.prodABEPercent) / 100);
-                
-                const additionalTeamPayout = canvasserPayout + confirmerPayout + elisoPayout + prodMSPayout + prodRSPayout + prodNCPayout + prodABEPayout;
-                const totalTeamPayout = altaCalTotalPayout + additionalTeamPayout;
-                const finalProfit = preliminaryProfit - additionalTeamPayout;
-                const profitPercent = totalAfterFees > 0 ? (finalProfit / totalAfterFees) * 100 : 0;
-                
-                return {
-                    contractAmount, houseFeeAmount, dealerFeeAmount, creditCardFeeAmount, totalAfterFees,
-                    afterFeesAndLabor, percentOfContract, vetRate, repRate, finalPerVetPayout, finalPerRepPayout,
-                    finalTotalVetsPayout, finalTotalRepsPayout, totalRideAlongPayout, altaCalTotalPayout,
-                    preliminaryProfit, canvasserPayout, confirmerPayout, elisoPayout, prodMSPayout, prodRSPayout,
-                    prodNCPayout, prodABEPayout, additionalTeamPayout, totalTeamPayout, finalProfit, profitPercent,
-                    vetsCount, repsCount, numRideAlongs: this.parseValue(data.numRideAlongs), totalCollected
-                };
-            },
-            
-            addCalculator() {
-                const calc = {
-                    id: this.nextId++,
-                    customerName: '', jobNumber: '', contractAmount: '', cashCheck: '', financeAmount: '',
-                    dealerFee: '', creditCard: '', creditCardFee: '', houseFeePercent: '', laborMaterial: '',
-                    numVets: '', numReps: '', rideAlong: '', rideAlongBonus: '', numRideAlongs: '',
-                    canvasserPercent: '2', confirmerPercent: '0.25', elisoPercent: '1.5',
-                    prodMSPercent: '0.25', prodMSAmount: '', prodRSPercent: '0.25', prodRSAmount: '',
-                    prodNCPercent: '0.25', prodNCAmount: '', prodABEPercent: '0.25', prodABEAmount: '',
-                    moneyThisWeek: '', financeSource: '', bankDropDay: ''
-                };
-                this.calculators.push(calc);
-                this.renderAll();
-            },
-            
-            deleteCalculator(id) {
-                if (this.calculators.length <= 1) {
-                    alert('Cannot delete the last calculator');
-                    return;
-                }
-                if (confirm('Delete this calculator?')) {
-                    this.calculators = this.calculators.filter(c => c.id !== id);
-                    this.renderAll();
-                }
-            },
-            
-            updateField(id, field, value) {
-                const calc = this.calculators.find(c => c.id === id);
-                if (calc) {
-                    calc[field] = value;
-                    
-                    if (field === 'contractAmount') {
-                        calc.houseFeePercent = this.getHouseFeePercent(value);
-                    }
-                    
-                    this.updateDisplaysOnly(id);
-                    this.updateSummary();
-                }
-            },
-            
-            updateDisplaysOnly(calcId) {
-                const calc = this.calculators.find(c => c.id === calcId);
-                if (!calc) return;
-                
-                const data = this.calculateOne(calc);
-                
-                document.querySelectorAll(`[data-calc-id="${calcId}"]`).forEach(el => {
-                    const field = el.getAttribute('data-field');
-                    if (field && Object.prototype.hasOwnProperty.call(data, field)) {
-                        const v = data[field];
-                        el.textContent = typeof v === 'number' ? this.fmt(v) : String(v);
-                    }
-                });
-                
-                const houseFeeInput = document.querySelector(`input[data-calc-id="${calcId}"][data-field="houseFeePercent"]`);
-                if (houseFeeInput) houseFeeInput.value = calc.houseFeePercent;
-                
-                const tierSection = document.getElementById(`tier-section-${calcId}`);
-                if (tierSection) {
-                    if (data.vetsCount > 0 || data.repsCount > 0) {
-                        tierSection.style.display = 'block';
-                        const tierInfo = document.getElementById(`tier-info-${calcId}`);
-                        if (tierInfo) {
-                            tierInfo.textContent = `Profit: ${data.percentOfContract.toFixed(1)}% → Vet: ${data.vetRate}% | Rep: ${data.repRate}%`;
-                        }
-                        
-                        const vetsBox = document.getElementById(`vets-box-${calcId}`);
-                        if (vetsBox) {
-                            if (data.vetsCount > 0) {
-                                vetsBox.style.display = 'block';
-                                vetsBox.innerHTML = `
-                                    <div style="font-weight: 700; text-align: center; margin-bottom: 8px;">VETS: ${data.vetsCount}</div>
-                                    <div class="tier-box light">
-                                        <div class="tier-label">Per Vet</div>
-                                        <div class="tier-value" style="color: #2E7D32;">${this.fmt(data.finalPerVetPayout)}</div>
-                                    </div>
-                                    <div class="tier-box bold">
-                                        <div class="tier-label">Total Vets</div>
-                                        <div class="tier-value" style="color: #1B5E20;">${this.fmt(data.finalTotalVetsPayout)}</div>
-                                    </div>
-                                `;
-                            } else {
-                                vetsBox.style.display = 'none';
-                            }
-                        }
-                        
-                        const repsBox = document.getElementById(`reps-box-${calcId}`);
-                        if (repsBox) {
-                            if (data.repsCount > 0) {
-                                repsBox.style.display = 'block';
-                                repsBox.innerHTML = `
-                                    <div style="font-weight: 700; text-align: center; margin-bottom: 8px;">REPS: ${data.repsCount}</div>
-                                    <div class="tier-box purple-light">
-                                        <div class="tier-label">Per Rep</div>
-                                        <div class="tier-value" style="color: #6A1B9A;">${this.fmt(data.finalPerRepPayout)}</div>
-                                    </div>
-                                    <div class="tier-box purple-bold">
-                                        <div class="tier-label">Total Reps</div>
-                                        <div class="tier-value" style="color: #4A148C;">${this.fmt(data.finalTotalRepsPayout)}</div>
-                                    </div>
-                                `;
-                            } else {
-                                repsBox.style.display = 'none';
-                            }
-                        }
-                    } else {
-                        tierSection.style.display = 'none';
-                    }
-                }
-            },
-            
-            renderAll() {
-                const container = document.getElementById('calculators');
-                container.innerHTML = this.calculators.map((calc, index) => this.renderCalculator(calc, index)).join('');
-                this.updateSummary();
-            },
-            
-            renderCalculator(calc, index) {
-                const data = this.calculateOne(calc);
-                const deleteBtn = this.calculators.length > 1 ? `<button class="delete-btn no-print" onclick="app.deleteCalculator(${calc.id})">×</button>` : '';
-                const showTiers = data.vetsCount > 0 || data.repsCount > 0;
-                const isFirst = index === 0;
-                
-                return `
-                    <div class="calculator">
-                        ${deleteBtn}
-                        <div class="calc-header">
-                            <h2 style="font-size: 18px; font-weight: 700;">FILE #${index + 1}${isFirst ? ' (FROM INVOICE SHEET)' : ''}</h2>
-                            <button class="btn btn-blue no-print" onclick="app.printSingle(${index})" style="padding: 10px 16px;">🖨️</button>
-                        </div>
-                        
-                        <div class="calc-section">
-                            <div class="form-grid" style="margin-bottom: 20px;">
-                                <div class="form-group">
-                                    <label>JOB NUMBER ${isFirst ? '(Auto-filled)' : ''}</label>
-                                    <input type="text" value="${calc.jobNumber}" ${isFirst ? 'class="auto-filled" readonly' : 'oninput="app.updateField(' + calc.id + ', \'jobNumber\', this.value)"'}>
-                                </div>
-                                <div class="form-group">
-                                    <label>CUSTOMER NAME</label>
-                                    <input type="text" value="${calc.customerName}" oninput="app.updateField(${calc.id}, 'customerName', this.value)">
-                                </div>
-                            </div>
-                            
-                            <div class="section">
-                                <div class="section-header blue">CONTRACT & PAYMENT</div>
-                                <div class="section-content">
-                                    <div class="form-grid">
-                                        <div class="form-group">
-                                            <label>CONTRACT AMOUNT ${isFirst ? '(Auto-filled)' : ''}</label>
-                                            <div class="input-with-symbol ${isFirst ? 'auto-filled' : ''}">
-                                                <span>$</span>
-                                                <input type="number" step="0.01" value="${calc.contractAmount}" ${isFirst ? 'readonly' : 'oninput="app.updateField(' + calc.id + ', \'contractAmount\', this.value)"'}>
-                                            </div>
-                                        </div>
-                                        <div class="form-group">
-                                            <label>CASH/CHECK</label>
-                                            <div class="input-with-symbol">
-                                                <span>$</span>
-                                                <input type="number" step="0.01" value="${calc.cashCheck}" oninput="app.updateField(${calc.id}, 'cashCheck', this.value)">
-                                            </div>
-                                        </div>
-                                        <div class="form-group">
-                                            <label>LABOR & MATERIAL ${isFirst ? '(Auto-filled)' : ''}</label>
-                                            <div class="input-with-symbol ${isFirst ? 'auto-filled' : ''}">
-                                                <span>$</span>
-                                                <input type="number" step="0.01" value="${calc.laborMaterial}" ${isFirst ? 'readonly' : 'oninput="app.updateField(' + calc.id + ', \'laborMaterial\', this.value)"'}>
-                                            </div>
-                                        </div>
-                                        <div class="form-group">
-                                            <label>FINANCE AMOUNT</label>
-                                            <div class="input-with-symbol">
-                                                <span>$</span>
-                                                <input type="number" step="0.01" value="${calc.financeAmount}" oninput="app.updateField(${calc.id}, 'financeAmount', this.value)">
-                                            </div>
-                                        </div>
-                                        <div class="form-group">
-                                            <label>DEALER FEE %</label>
-                                            <input type="text" value="${calc.dealerFee}" placeholder="3.5" oninput="app.updateField(${calc.id}, 'dealerFee', this.value)">
-                                            <div class="calc-display" data-calc-id="${calc.id}" data-field="dealerFeeAmount">${this.fmt(data.dealerFeeAmount)}</div>
-                                        </div>
-                                        <div class="form-group">
-                                            <label>HOUSE FEE % (Auto)</label>
-                                            <div class="input-with-symbol auto-filled">
-                                                <input type="number" step="0.01" value="${calc.houseFeePercent}" data-calc-id="${calc.id}" data-field="houseFeePercent" readonly>
-                                                <span>%</span>
-                                            </div>
-                                            <div class="calc-display" data-calc-id="${calc.id}" data-field="houseFeeAmount">${this.fmt(data.houseFeeAmount)}</div>
-                                        </div>
-                                        <div class="form-group">
-                                            <label>CREDIT CARD</label>
-                                            <div class="input-with-symbol">
-                                                <span>$</span>
-                                                <input type="number" step="0.01" value="${calc.creditCard}" oninput="app.updateField(${calc.id}, 'creditCard', this.value)">
-                                            </div>
-                                        </div>
-                                        <div class="form-group">
-                                            <label>CC FEE %</label>
-                                            <input type="number" step="0.01" value="${calc.creditCardFee}" placeholder="3.5" oninput="app.updateField(${calc.id}, 'creditCardFee', this.value)">
-                                            <div class="calc-display" data-calc-id="${calc.id}" data-field="creditCardFeeAmount">${this.fmt(data.creditCardFeeAmount)}</div>
-                                        </div>
-                                        <div class="form-group">
-                                            <label>TOTAL AFTER FEES</label>
-                                            <div style="text-align: center; padding: 15px; background: #BBDEFB; border-radius: 6px; font-weight: 700; font-size: 18px;" data-calc-id="${calc.id}" data-field="totalAfterFees">
-                                                ${this.fmt(data.totalAfterFees)}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="section">
-                                <div class="section-header green">ALTA CAL TEAM (TIERED RATES)</div>
-                                <div class="section-content">
-                                    <div class="form-grid" style="margin-bottom: 15px;">
-                                        <div class="form-group">
-                                            <label>VETS ON CONTRACT</label>
-                                            <input type="number" value="${calc.numVets}" oninput="app.updateField(${calc.id}, 'numVets', this.value)" style="text-align: center; font-size: 20px; font-weight: 700;">
-                                        </div>
-                                        <div class="form-group">
-                                            <label>REPS ON CONTRACT</label>
-                                            <input type="number" value="${calc.numReps}" oninput="app.updateField(${calc.id}, 'numReps', this.value)" style="text-align: center; font-size: 20px; font-weight: 700;">
-                                        </div>
-                                        <div class="form-group">
-                                            <label>RIDE ALONGS</label>
-                                            <input type="number" value="${calc.numRideAlongs}" oninput="app.updateField(${calc.id}, 'numRideAlongs', this.value)" style="text-align: center; font-size: 20px; font-weight: 700;">
-                                        </div>
-                                    </div>
-                                    
-                                    <div id="tier-section-${calc.id}" class="tier-results" style="display: ${showTiers ? 'block' : 'none'};">
-                                        <div class="tier-info" id="tier-info-${calc.id}">
-                                            Profit: ${data.percentOfContract.toFixed(1)}% → Vet: ${data.vetRate}% | Rep: ${data.repRate}%
-                                        </div>
-                                        <div class="tier-grid">
-                                            <div class="tier-person" id="vets-box-${calc.id}" style="display: ${data.vetsCount > 0 ? 'block' : 'none'};">
-                                                <div style="font-weight: 700; text-align: center; margin-bottom: 8px;">VETS: ${data.vetsCount}</div>
-                                                <div class="tier-box light">
-                                                    <div class="tier-label">Per Vet</div>
-                                                    <div class="tier-value" style="color: #2E7D32;">${this.fmt(data.finalPerVetPayout)}</div>
-                                                </div>
-                                                <div class="tier-box bold">
-                                                    <div class="tier-label">Total Vets</div>
-                                                    <div class="tier-value" style="color: #1B5E20;">${this.fmt(data.finalTotalVetsPayout)}</div>
-                                                </div>
-                                            </div>
-                                            <div class="tier-person" id="reps-box-${calc.id}" style="display: ${data.repsCount > 0 ? 'block' : 'none'};">
-                                                <div style="font-weight: 700; text-align: center; margin-bottom: 8px;">REPS: ${data.repsCount}</div>
-                                                <div class="tier-box purple-light">
-                                                    <div class="tier-label">Per Rep</div>
-                                                    <div class="tier-value" style="color: #6A1B9A;">${this.fmt(data.finalPerRepPayout)}</div>
-                                                </div>
-                                                <div class="tier-box purple-bold">
-                                                    <div class="tier-label">Total Reps</div>
-                                                    <div class="tier-value" style="color: #4A148C;">${this.fmt(data.finalTotalRepsPayout)}</div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="form-grid" style="margin-top: 15px;">
-                                        <div class="form-group">
-                                            <label style="color: #D32F2F;">RIDE ALONG FEE</label>
-                                            <div class="input-with-symbol" style="background: #FFEBEE; border-color: #EF5350;">
-                                                <span>$</span>
-                                                <input type="number" step="0.01" value="${calc.rideAlong}" oninput="app.updateField(${calc.id}, 'rideAlong', this.value)" style="background: transparent;">
-                                            </div>
-                                        </div>
-                                        <div class="form-group">
-                                            <label style="color: #D32F2F;">RIDE ALONG BONUS</label>
-                                            <div class="input-with-symbol" style="background: #FFEBEE; border-color: #EF5350;">
-                                                <span>$</span>
-                                                <input type="number" step="0.01" value="${calc.rideAlongBonus}" oninput="app.updateField(${calc.id}, 'rideAlongBonus', this.value)" style="background: transparent;">
-                                            </div>
-                                        </div>
-                                        ${data.numRideAlongs > 0 ? `
-                                            <div class="form-group">
-                                                <label>TOTAL RIDE ALONG PAYOUT</label>
-                                                <div style="text-align: center; padding: 12px; background: #FFCDD2; border: 2px solid #EF5350; border-radius: 6px; font-weight: 700; font-size: 16px;" data-calc-id="${calc.id}" data-field="totalRideAlongPayout">
-                                                    ${this.fmt(data.totalRideAlongPayout)}
-                                                </div>
-                                            </div>
-                                        ` : ''}
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="section">
-                                <div class="section-header purple">ADDITIONAL TEAM</div>
-                                <div class="section-content">
-                                    <div style="text-align: center; padding: 12px; background: #E1BEE7; border: 2px solid #9C27B0; border-radius: 6px; font-weight: 700; margin-bottom: 12px;">
-                                        <div style="font-size: 11px; margin-bottom: 4px;">ADDITIONAL TEAM TOTAL</div>
-                                        <div style="font-size: 18px;" data-calc-id="${calc.id}" data-field="additionalTeamPayout">${this.fmt(data.additionalTeamPayout)}</div>
-                                    </div>
-                                    
-                                    <div class="form-grid">
-                                        <div class="form-group">
-                                            <label>CANVASSER %</label>
-                                            <div style="display: flex; gap: 8px; align-items: center;">
-                                                <input type="number" step="0.01" value="${calc.canvasserPercent}" oninput="app.updateField(${calc.id}, 'canvasserPercent', this.value)" style="width: 70px;">
-                                                <span style="font-size: 13px;">% = <span data-calc-id="${calc.id}" data-field="canvasserPayout">${this.fmt(data.canvasserPayout)}</span></span>
-                                            </div>
-                                        </div>
-                                        <div class="form-group">
-                                            <label>CONFIRMER %</label>
-                                            <div style="display: flex; gap: 8px; align-items: center;">
-                                                <input type="number" step="0.01" value="${calc.confirmerPercent}" oninput="app.updateField(${calc.id}, 'confirmerPercent', this.value)" style="width: 70px;">
-                                                <span style="font-size: 13px;">% = <span data-calc-id="${calc.id}" data-field="confirmerPayout">${this.fmt(data.confirmerPayout)}</span></span>
-                                            </div>
-                                        </div>
-                                        <div class="form-group">
-                                            <label>ELISO %</label>
-                                            <div style="display: flex; gap: 8px; align-items: center;">
-                                                <input type="number" step="0.01" value="${calc.elisoPercent}" oninput="app.updateField(${calc.id}, 'elisoPercent', this.value)" style="width: 70px;">
-                                                <span style="font-size: 13px;">% = <span data-calc-id="${calc.id}" data-field="elisoPayout">${this.fmt(data.elisoPayout)}</span></span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="form-grid" style="margin-top: 12px;">
-                                        <div class="form-group">
-                                            <label>PROD MS</label>
-                                            <div style="display: flex; gap: 6px; align-items: center; font-size: 13px;">
-                                                <input type="number" step="0.01" value="${calc.prodMSPercent}" oninput="app.updateField(${calc.id}, 'prodMSPercent', this.value)" style="width: 50px;">
-                                                <span>%</span>
-                                                <input type="number" step="0.01" value="${calc.prodMSAmount}" oninput="app.updateField(${calc.id}, 'prodMSAmount', this.value)" style="width: 80px;">
-                                                <span>= <span data-calc-id="${calc.id}" data-field="prodMSPayout">${this.fmt(data.prodMSPayout)}</span></span>
-                                            </div>
-                                        </div>
-                                        <div class="form-group">
-                                            <label>PROD RS</label>
-                                            <div style="display: flex; gap: 6px; align-items: center; font-size: 13px;">
-                                                <input type="number" step="0.01" value="${calc.prodRSPercent}" oninput="app.updateField(${calc.id}, 'prodRSPercent', this.value)" style="width: 50px;">
-                                                <span>%</span>
-                                                <input type="number" step="0.01" value="${calc.prodRSAmount}" oninput="app.updateField(${calc.id}, 'prodRSAmount', this.value)" style="width: 80px;">
-                                                <span>= <span data-calc-id="${calc.id}" data-field="prodRSPayout">${this.fmt(data.prodRSPayout)}</span></span>
-                                            </div>
-                                        </div>
-                                        <div class="form-group">
-                                            <label>PROD NC</label>
-                                            <div style="display: flex; gap: 6px; align-items: center; font-size: 13px;">
-                                                <input type="number" step="0.01" value="${calc.prodNCPercent}" oninput="app.updateField(${calc.id}, 'prodNCPercent', this.value)" style="width: 50px;">
-                                                <span>%</span>
-                                                <input type="number" step="0.01" value="${calc.prodNCAmount}" oninput="app.updateField(${calc.id}, 'prodNCAmount', this.value)" style="width: 80px;">
-                                                <span>= <span data-calc-id="${calc.id}" data-field="prodNCPayout">${this.fmt(data.prodNCPayout)}</span></span>
-                                            </div>
-                                        </div>
-                                        <div class="form-group">
-                                            <label>PROD ABE</label>
-                                            <div style="display: flex; gap: 6px; align-items: center; font-size: 13px;">
-                                                <input type="number" step="0.01" value="${calc.prodABEPercent}" oninput="app.updateField(${calc.id}, 'prodABEPercent', this.value)" style="width: 50px;">
-                                                <span>%</span>
-                                                <input type="number" step="0.01" value="${calc.prodABEAmount}" oninput="app.updateField(${calc.id}, 'prodABEAmount', this.value)" style="width: 80px;">
-                                                <span>= <span data-calc-id="${calc.id}" data-field="prodABEPayout">${this.fmt(data.prodABEPayout)}</span></span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="section">
-                                <div class="section-header yellow">FINANCE & BANK</div>
-                                <div class="section-content">
-                                    <div class="form-grid">
-                                        <div class="form-group">
-                                            <label>MONEY THIS WEEK</label>
-                                            <div class="input-with-symbol">
-                                                <span>$</span>
-                                                <input type="number" step="0.01" value="${calc.moneyThisWeek}" oninput="app.updateField(${calc.id}, 'moneyThisWeek', this.value)">
-                                            </div>
-                                        </div>
-                                        <div class="form-group">
-                                            <label>FINANCE SOURCE</label>
-                                            <select onchange="app.updateField(${calc.id}, 'financeSource', this.value)">
-                                                <option value="" ${calc.financeSource === '' ? 'selected' : ''}>Select</option>
-                                                <option value="Finance" ${calc.financeSource === 'Finance' ? 'selected' : ''}>Finance</option>
-                                                <option value="Cash" ${calc.financeSource === 'Cash' ? 'selected' : ''}>Cash</option>
-                                                <option value="Both" ${calc.financeSource === 'Both' ? 'selected' : ''}>Both</option>
-                                            </select>
-                                        </div>
-                                        <div class="form-group">
-                                            <label>BANK DROP DAY</label>
-                                            <select onchange="app.updateField(${calc.id}, 'bankDropDay', this.value)">
-                                                <option value="" ${calc.bankDropDay === '' ? 'selected' : ''}>Select Day</option>
-                                                <option value="Monday" ${calc.bankDropDay === 'Monday' ? 'selected' : ''}>Monday</option>
-                                                <option value="Tuesday" ${calc.bankDropDay === 'Tuesday' ? 'selected' : ''}>Tuesday</option>
-                                                <option value="Wednesday" ${calc.bankDropDay === 'Wednesday' ? 'selected' : ''}>Wednesday</option>
-                                                <option value="Thursday" ${calc.bankDropDay === 'Thursday' ? 'selected' : ''}>Thursday</option>
-                                                <option value="Friday" ${calc.bankDropDay === 'Friday' ? 'selected' : ''}>Friday</option>
-                                                <option value="Saturday" ${calc.bankDropDay === 'Saturday' ? 'selected' : ''}>Saturday</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="bottom-totals">
-                                <h3>📊 FILE #${index + 1} TOTALS</h3>
-                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                                    <div class="big-card blue">
-                                        <div class="label">Total Payout</div>
-                                        <div class="value" data-calc-id="${calc.id}" data-field="totalTeamPayout">${this.fmt(data.totalTeamPayout)}</div>
-                                    </div>
-                                    <div class="big-card purple">
-                                        <div class="label">Total Profit</div>
-                                        <div class="value" data-calc-id="${calc.id}" data-field="finalProfit">${this.fmt(data.finalProfit)}</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            },
-            
-            updateSummary() {
-                let totalPayout = 0, totalProfit = 0, totalMoney = 0, totalAfterFees = 0;
-                
-                this.calculators.forEach(calc => {
-                    const data = this.calculateOne(calc);
-                    totalPayout += data.totalTeamPayout;
-                    totalProfit += data.finalProfit;
-                    totalMoney += this.parseValue(calc.moneyThisWeek);
-                    totalAfterFees += data.totalAfterFees;
-                });
-                
-                const profitPercent = totalAfterFees > 0 ? (totalProfit / totalAfterFees) * 100 : 0;
-                
-                document.getElementById('summaryCards').innerHTML = `
-                    <div class="summary-card blue">
-                        <div class="label">TOTAL PAYOUT</div>
-                        <div class="value">${this.fmt(totalPayout)}</div>
-                    </div>
-                    <div class="summary-card purple">
-                        <div class="label">TOTAL PROFIT</div>
-                        <div class="value">${this.fmt(totalProfit)}</div>
-                    </div>
-                    <div class="summary-card green">
-                        <div class="label">PROFIT %</div>
-                        <div class="value">${profitPercent.toFixed(2)}%</div>
-                    </div>
-                    <div class="summary-card red">
-                        <div class="label">MONEY THIS WEEK</div>
-                        <div class="value">${this.fmt(totalMoney)}</div>
-                    </div>
-                `;
-            },
-            
-            printSingle(index) {
-                alert('Detailed print for File #' + (index + 1) + ' will open. Press Ctrl+P or Cmd+P to print.');
-                window.print();
-            },
-            
-            showPrintReport() {
-                alert('Combined report will open. Press Ctrl+P or Cmd+P to print.');
-                window.print();
-            },
-            
-            closePrint() {
-                document.getElementById('mainView').style.display = 'block';
-                document.getElementById('printView').style.display = 'none';
-                document.getElementById('printView').innerHTML = '';
-            },
-            
-            showSaveDialog() {
-                const name = prompt('Enter report name:');
-                if (name && name.trim()) {
-                    const data = {
-                        name: name.trim(),
-                        date: new Date().toISOString(),
-                        collectionWeek: document.getElementById('collectionWeek').value,
-                        calculators: this.calculators,
-                        invoiceData: {
-                            jobNumber: document.getElementById('invoiceJobNumber').value,
-                            contractAmount: document.getElementById('invoiceContractAmount').value,
-                            contractDate: document.getElementById('contractDate').value
-                        }
-                    };
-                    const key = 'report_' + Date.now();
-                    try {
-                      localStorage.setItem(key, JSON.stringify(data));
-                      alert('Report saved!');
-                    } catch (e) {
-                      alert('Unable to save to localStorage (storage may be full or blocked).');
-                    }
-                }
-            }
-          };
+/* --- REPLACE app.printSingle with this --- */
+app.printSingle = function (index) {
+  const calc = this.calculators[index];
+  if (!calc) return;
 
-          // Expose globally so inline HTML handlers (onclick/oninput) can call methods on GitHub Pages.
-          window.app = app;
+  const header = `
+    <h1 style="text-align:center;color:#2196F3;margin:0 0 16px 0;border-bottom:3px solid #2196F3;padding-bottom:12px;">
+      FILE #${index + 1} – Payout Sheet
+    </h1>
+  `;
 
-          // Initialize once DOM is ready
-          window.addEventListener('DOMContentLoaded', () => app.init());
-        })();
-    </script>
-</body>
-</html>
+  const html = `
+    <div style="padding:24px;font-family:Arial, sans-serif;">
+      ${header}
+      ${buildFilePrintHTML(this, calc, index)}
+    </div>
+  `;
+
+  document.getElementById('printView').innerHTML = html;
+  document.getElementById('mainView').style.display = 'none';
+  document.getElementById('printView').style.display = 'block';
+
+  setTimeout(() => {
+    window.print();
+    this.closePrint();
+  }, 100);
+};
+
+/* --- REPLACE app.showPrintReport with this --- */
+app.showPrintReport = function () {
+  const week = document.getElementById('collectionWeek').value || '—';
+  const header = `
+    <h1 style="text-align:center;color:#2196F3;margin:0 0 8px 0;border-bottom:3px solid #2196F3;padding-bottom:12px;">
+      Combined Report – Payout Sheets
+    </h1>
+    <div style="text-align:center;font-size:14px;margin-bottom:16px;">
+      Collection Week: <strong>${this.escape(week)}</strong>
+    </div>
+  `;
+
+  const sections = this.calculators
+    .map((c, i) => buildFilePrintHTML(this, c, i))
+    .join('');
+
+  const html = `<div style="padding:24px;font-family:Arial, sans-serif;">${header}${sections}</div>`;
+
+  document.getElementById('printView').innerHTML = html;
+  document.getElementById('mainView').style.display = 'none';
+  document.getElementById('printView').style.display = 'block';
+
+  setTimeout(() => {
+    window.print();
+    this.closePrint();
+  }, 100);
+};
+
+/* --- REPLACE app.closePrint with this (keeps your invoice print working too) --- */
+app.closePrint = function () {
+  document.getElementById('mainView').style.display = 'block';
+  document.getElementById('printView').style.display = 'none';
+  document.getElementById('printView').innerHTML = '';
+};
+</script>
